@@ -551,7 +551,7 @@ void PhysicsSystem::ImpulseResolveContinuedResponse(GameObject& a, GameObject& b
 	float FIF = 0.0f;
 	float& FIFR = FIF;
 	//put in friction
-	if (transformB.GetGoatID() == 7) {
+	if (transformB.GetGoatID() == 7 && transformA.GetPosition() != Vector3{0,-20,0}) {
 		Vector3 floorColisionNormal = p.normal;
 		Vector3 distanceFromCollision = (transformB.GetPosition() - transformA.GetPosition());
 		float coefficeintOfRestitution = 0.2f;
@@ -564,16 +564,29 @@ void PhysicsSystem::ImpulseResolveContinuedResponse(GameObject& a, GameObject& b
 		float bottomOfImpulse = inversePlayerMass + tenserByVectorNormal;
 		float impulseForce = topOfImpulse / bottomOfImpulse;
 		FIFR = impulseForce;
+		//Debug::DrawLine(transformB.GetPosition(),transformA.GetPosition());
+		/*Vector3 collisionVector = ((transformB.GetPosition() - transformA.GetPosition()));
+		if (transformA.GetPosition() != Vector3{0,-20,0}) {
+			std::cout << collisionVector << std::endl;
+		}
+		*/
 	}
 	// put in friction
+	//Get absorbtion amount
+	float aForceScaler = 1 - (a.getImpactAbsorbtionAmount());
+	float bForceScaler = 1 - (b.getImpactAbsorbtionAmount());
+	//get absorbtion amount
 	//+ (p.normal * transformA.getFrictionImpulse())
-	Vector3 fullImpulse = p.normal * j ;
+	Vector3 fullImpulse = p.normal * j;
 	Vector3 frictionVector = p.normal * FIF;
-	std::cout << fullImpulse <<" "<< frictionVector << std::endl;
+	FIFR = 0;
+	//std::cout << fullImpulse <<" "<< frictionVector << std::endl;
 
 
-	physA->ApplyLinearImpulse(-fullImpulse);
-	physB->ApplyLinearImpulse(fullImpulse);
+	//physA->ApplyLinearImpulse(( - fullImpulse));
+	//physB->ApplyLinearImpulse((fullImpulse));
+	physA->ApplyLinearImpulse((-fullImpulse)* aForceScaler);
+	physB->ApplyLinearImpulse((fullImpulse)*bForceScaler);
 	physB->ApplyLinearImpulse(frictionVector);
 
 	physA->ApplyAngularImpulse(Vector3::Cross(relativeA, -fullImpulse));
