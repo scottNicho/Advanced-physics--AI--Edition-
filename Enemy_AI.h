@@ -15,6 +15,12 @@ namespace NCL::CSC8503 {
 	class EnemyAI :public GameObject {
 	public:
 
+		void preResponseCapture(GameObject* playerCap) {
+			prePlayerPositionCapture = playerCap->GetTransform().GetPosition();
+		}
+
+		//void postResponse
+
 		void UpdateDistanceFromCentre() {
 			distanceFromCentre = (Vector3{0,-20,0} - this->GetTransform().GetPosition()).Length();
 		}
@@ -40,6 +46,7 @@ namespace NCL::CSC8503 {
 
 	protected:
 		const  Vector3 centreSafteyCircle = Vector3{0,-20,0};
+		Vector3 prePlayerPositionCapture = {};
 		float distanceFromCentre = 0;
 		float agressionLevel = 0.5;
 		const float innerCircleRadius = 8;
