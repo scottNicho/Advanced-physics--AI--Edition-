@@ -33,6 +33,29 @@ namespace NCL::CSC8503 {
 			agressionLevel = newAgressionLevel;
 		}
 
+		bool getFacingPlayer() {
+			return facingPlayer;
+		}
+
+		void toggleFacingPlayer() {
+			facingPlayer = !facingPlayer;
+		}
+
+		void setFacingPlayer(bool facing) {
+			facingPlayer = facing;
+		}
+
+		bool getInsideAgressionRadius() {
+			return insideAgressionRadius;
+		}
+
+		void updateInAgressionRadius() {
+			if (distanceFromCentre < agressionRadius) {
+				insideAgressionRadius =  true;
+			}
+			insideAgressionRadius = false;
+		}
+
 		float getAngleObjectTarget( GameObject* target) {
 			Vector3 targetObjectPosition = target->GetTransform().GetPosition();
 			Vector3 objectfacing = (this->GetTransform().GetOrientation() * Vector3 { 0, 0, -1 }).Normalised();
@@ -48,6 +71,7 @@ namespace NCL::CSC8503 {
 			if (angle <= 0.2) {
 				this->GetPhysicsObject()->ClearForces();
 				this->GetPhysicsObject()->SetAngularVelocity({0,0,0});
+				setFacingPlayer(true);
 				return;
 			}
 			if (relativeLeftOrRight(playerTarget) == 1) {
@@ -93,10 +117,13 @@ namespace NCL::CSC8503 {
 		const  Vector3 centreSafteyCircle = Vector3{0,-20,0};
 		Vector3 prePlayerPositionCapture = {};
 		float distanceFromCentre = 0;
+		float agressionRadius = 10;
 		float agressionLevel = 0.5;
 		const float innerCircleRadius = 8;
 		const float outerCircleRadius = 15;
 		bool playerClose = false;
+		bool facingPlayer = false;
+		bool insideAgressionRadius = false;
 	};
 
 }
