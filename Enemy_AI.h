@@ -87,7 +87,9 @@ namespace NCL::CSC8503 {
 		int relativeLeftOrRight(GameObject* targetPlayer) {
 			Vector3 EnemyPosition = this->GetTransform().GetPosition();
 			Vector3 TargetPosition = targetPlayer->GetTransform().GetPosition();
-			Vector2 EnemyRelativePosition = {  EnemyPosition.x, EnemyPosition.z}; //consider the enemy position as the origin
+			//Vector2 EnemyRelativePosition = {  EnemyPosition.x, EnemyPosition.z}; //consider the enemy position as the origin
+			Vector3 EnemyRelativeDirectionPosition = ((this->GetTransform().GetOrientation())*Vector3{0,0,-1});
+			Vector2 EnemyRelativePosition = { EnemyRelativeDirectionPosition.x, EnemyRelativeDirectionPosition.z };
 			float EnemyPositionGradient = EnemyRelativePosition.y / EnemyRelativePosition.x; // gradient of the cartiesian line going through the normalised direction vector and the origin
 			Vector2 TargetRelativePosition = {TargetPosition.x - EnemyPosition.x,TargetPosition.z - EnemyPosition.z}; // the target augmented in to space relative to the enemy
 			float interceptXPoint = (TargetRelativePosition.y * EnemyRelativePosition.x) / EnemyRelativePosition.y; // solve for the x value when a horisontal line from target intercepts
@@ -95,17 +97,17 @@ namespace NCL::CSC8503 {
 			Vector2 targetToInterceptPoint = iterceptionPoint - TargetRelativePosition; // get the vector from target to intercep point to get the direction
 			
 			if (targetToInterceptPoint.x > 0 && (EnemyRelativePosition.y>= 0) ) {
-				return 1;
+				return -1;
 			}
 			if (targetToInterceptPoint.x > 0 && (EnemyRelativePosition.y < 0)) {
-				return -1;
+				return 1;
 			}
 			if (targetToInterceptPoint.x < 0 && (EnemyRelativePosition.y > 0)) {
-				return -1;
+				return 1;
 			}
 
 			if (targetToInterceptPoint.x < 0 && (EnemyRelativePosition.y < 0)) {
-				return 1;
+				return -1;
 			}
 			/*Vector3 EnemyDirectionVector = ((this->GetTransform().GetOrientation())*Vector3{0,0,-1}).Normalised();
 			return EnemyDirectionVector;*/
