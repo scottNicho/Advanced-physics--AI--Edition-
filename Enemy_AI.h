@@ -7,9 +7,13 @@
 #include<cmath>
 #include<set>
 #include"PhysicsObject.h"
-
+#include <chrono>
+#include <thread>
+#include<windows.h>
+#include <cstdlib>
 
 using namespace std;
+
 namespace NCL::CSC8503 {
 
 	class EnemyAI :public GameObject {
@@ -20,6 +24,79 @@ namespace NCL::CSC8503 {
 		}
 
 		//void postResponse
+
+		//Enemy Ai movement
+
+		bool getEnemyDash() {
+			return enemyDash;
+		}
+
+		void toggleEnemyDash() {
+			enemyDash = !enemyDash;
+		}
+
+
+		void enemyMoveForward() {
+			Vector3 enemyDirectionVector = this->GetTransform().GetOrientation() * Vector3 { 0, 0, -1 };
+			this->GetPhysicsObject()->AddForce(enemyDirectionVector*20.0f);
+		}
+
+		void enemyMoveBackwards(GameObject* enemyAI) {
+			Vector3 enemyDirectionVector = enemyAI->GetTransform().GetOrientation() * Vector3 { 0, 0, -1 };
+			enemyAI->GetPhysicsObject()->AddForce(enemyDirectionVector * -10.0f);
+		}
+
+		void enemyMoveRight() {
+			Vector3 enemyDirectionVector = this->GetTransform().GetOrientation() * Vector3 { 1, 0, 0 };
+			this->GetPhysicsObject()->AddForce(enemyDirectionVector * 100.0f);
+		}
+
+		void enemyMoveLeft() {
+			Vector3 enemyDirectionVector = this->GetTransform().GetOrientation() * Vector3 { -1, 0, 0 };
+			this->GetPhysicsObject()->AddForce(enemyDirectionVector * 100.0f);
+		}
+
+		void enemyJump() {
+			Vector3 enemyDirectionVector = this->GetTransform().GetOrientation() * Vector3 { 0, 1, 0 };
+			this->GetPhysicsObject()->AddForce(enemyDirectionVector * 1100.0f);
+		}
+
+		void enemyCharge() {
+			if (!(this->getEnemyDash())) {
+				return;
+			}
+			Vector3 enemyDirectionVector = this->GetTransform().GetOrientation() * Vector3 { 0, 0, -1 };
+			this->GetPhysicsObject()->AddForce(enemyDirectionVector * 5000.0f);
+			this->toggleEnemyDash();
+		}
+
+		void enemyFaint() {
+			Vector3 enemyDirectionVector = this->GetTransform().GetOrientation() * Vector3 { 0, 0, -1 };
+			this->GetPhysicsObject()->AddForce(enemyDirectionVector * 5000.0f);
+			Sleep(1000);
+			this->GetPhysicsObject()->AddForce(enemyDirectionVector * -10000.0f);
+		}
+
+		void enemySideDodge() {
+			int ranX = rand()%10;
+			if (ranX >= 5) {
+				enemyMoveRight();
+				return;
+			}
+			enemyMoveLeft();
+		}
+
+		void moveToCentre() {
+			Vector3 directionToCentre = (centreSafteyCircle - this->GetTransform().GetPosition()).Normalised();
+			float distanceToCentre = directionToCentre.Length();
+			this->GetPhysicsObject()->AddForce(directionToCentre * (10*distanceToCentre));
+		}
+
+		void updateEnemyAction() {
+			enemyFaint();
+		}
+
+		//Enemy Ai movement 
 
 		void UpdateDistanceFromCentre() {
 			distanceFromCentre = (Vector3{0,-20,0} - this->GetTransform().GetPosition()).Length();
@@ -125,6 +202,7 @@ namespace NCL::CSC8503 {
 		const float outerCircleRadius = 15;
 		bool playerClose = false;
 		bool facingPlayer = false;
+		bool enemyDash = true;
 		bool insideAgressionRadius = false;
 	};
 
