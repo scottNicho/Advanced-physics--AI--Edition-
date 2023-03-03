@@ -62,6 +62,12 @@ namespace NCL::CSC8503 {
 			return totalResponse[valueNeeded];
 		}
 
+		void AddToTotalResponse(string vectorToRecieve) {//argument the vector you wish to add element too
+			if (getResponseValue(vectorToRecieve).size() > 20) {
+				getResponseValue(vectorToRecieve).pop_back();//checks if the vector is above size 20 if it is remove an element
+			}
+			getResponseValue(vectorToRecieve).push_back(response);
+		}
 
 		void updateResponse();
 
