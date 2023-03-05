@@ -15,7 +15,7 @@ namespace NCL::CSC8503 {
 	class playerState :public GameObject {
 	public:
 
-		playerState(GameObject* theEnemy);
+		playerState(GameObject* theEnemy, GameObject* thePlayer);
 
 		struct PositionData
 		{
@@ -71,7 +71,9 @@ namespace NCL::CSC8503 {
 
 		void updateResponse();
 
-		void setCurrentPosition();
+		void UpdateCurrentPosition();
+
+		void setInitialPosition();
 
 		void setIsPlayerJumping();
 
@@ -113,8 +115,17 @@ namespace NCL::CSC8503 {
 
 		void updateState();
 
+		bool getUpdateFlag() {
+			return updateFlag;
+		}
+
+		void toggleUpdateFlag() {
+			updateFlag = !updateFlag;
+		}
+
 	protected:
 
+		bool updateFlag = false;
 		bool playerIsJumping = false;
 		currentStateForward playerForwardState;
 		currentStateSideward playerSideState;
