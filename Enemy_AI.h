@@ -11,6 +11,7 @@
 #include <thread>
 #include<windows.h>
 #include <cstdlib>
+#include"playerState.h"
 
 using namespace std;
 
@@ -19,84 +20,26 @@ namespace NCL::CSC8503 {
 	class EnemyAI :public GameObject {
 	public:
 
+		EnemyAI(GameObject* thePlayerPassthrough) {
+			playerTag = new playerState(this, thePlayerPassthrough);
+		}
+
+
+		~EnemyAI() {
+			playerTag;
+		}
+
 		void preResponseCapture(GameObject* playerCap) {
 			prePlayerPositionCapture = playerCap->GetTransform().GetPosition();
 		}
 
+		playerState* getPlayerTag() {
+			return playerTag;
+		}
+
 		//void postResponse
 
-		//Enemy Ai movement
-
-		bool getEnemyDash() {
-			return enemyDash;
-		}
-
-		void toggleEnemyDash() {
-			enemyDash = !enemyDash;
-		}
-
-
-		void enemyMoveForward() {
-			Vector3 enemyDirectionVector = this->GetTransform().GetOrientation() * Vector3 { 0, 0, -1 };
-			this->GetPhysicsObject()->AddForce(enemyDirectionVector*20.0f);
-		}
-
-		void enemyMoveBackwards(GameObject* enemyAI) {
-			Vector3 enemyDirectionVector = enemyAI->GetTransform().GetOrientation() * Vector3 { 0, 0, -1 };
-			enemyAI->GetPhysicsObject()->AddForce(enemyDirectionVector * -10.0f);
-		}
-
-		void enemyMoveRight() {
-			Vector3 enemyDirectionVector = this->GetTransform().GetOrientation() * Vector3 { 1, 0, 0 };
-			this->GetPhysicsObject()->AddForce(enemyDirectionVector * 100.0f);
-		}
-
-		void enemyMoveLeft() {
-			Vector3 enemyDirectionVector = this->GetTransform().GetOrientation() * Vector3 { -1, 0, 0 };
-			this->GetPhysicsObject()->AddForce(enemyDirectionVector * 100.0f);
-		}
-
-		void enemyJump() {
-			Vector3 enemyDirectionVector = this->GetTransform().GetOrientation() * Vector3 { 0, 1, 0 };
-			this->GetPhysicsObject()->AddForce(enemyDirectionVector * 1100.0f);
-		}
-
-		void enemyCharge() {
-			if (!(this->getEnemyDash())) {
-				return;
-			}
-			Vector3 enemyDirectionVector = this->GetTransform().GetOrientation() * Vector3 { 0, 0, -1 };
-			this->GetPhysicsObject()->AddForce(enemyDirectionVector * 5000.0f);
-			this->toggleEnemyDash();
-		}
-
-		void enemyFaint() {
-			Vector3 enemyDirectionVector = this->GetTransform().GetOrientation() * Vector3 { 0, 0, -1 };
-			this->GetPhysicsObject()->AddForce(enemyDirectionVector * 5000.0f);
-			Sleep(1000);
-			this->GetPhysicsObject()->AddForce(enemyDirectionVector * -10000.0f);
-		}
-
-		void enemySideDodge() {
-			int ranX = rand()%10;
-			if (ranX >= 5) {
-				enemyMoveRight();
-				return;
-			}
-			enemyMoveLeft();
-		}
-
-		void moveToCentre() {
-			Vector3 directionToCentre = (centreSafteyCircle - this->GetTransform().GetPosition()).Normalised();
-			float distanceToCentre = directionToCentre.Length();
-			this->GetPhysicsObject()->AddForce(directionToCentre * (10*distanceToCentre));
-		}
-
-		void updateEnemyAction() {
-			enemyFaint();
-		}
-
-		//Enemy Ai movement 
+		
 
 		void UpdateDistanceFromCentre() {
 			distanceFromCentre = (Vector3{0,-20,0} - this->GetTransform().GetPosition()).Length();
@@ -140,6 +83,27 @@ namespace NCL::CSC8503 {
 			float dotProduct = Vector3::Dot(objectfacing, objectToTarget);
 			float angleBetween = acos(dotProduct / ((objectfacing.Length()) * (objectToTarget.Length())));
 			return angleBetween;
+		}
+
+		float getAngleToPosition(Vector3 position) {
+			Vector3 objectfacing = (this->GetTransform().GetOrientation() * Vector3 { 0, 0, -1 }).Normalised();
+			Vector3 objectToTarget = ((position)-(this->GetTransform().GetPosition())).Normalised();
+			float dotProduct = Vector3::Dot(objectfacing, objectToTarget);
+			float angleBetween = acos(dotProduct / ((objectfacing.Length()) * (objectToTarget.Length())));
+			return angleBetween;
+		}
+
+		bool facePosition(Vector3 anchorPosition) {
+			if (getAngleToPosition(anchorPosition) <= 0.2) {
+				return true;
+			}
+				if (relativeLeftOrRightPosition(anchorPosition) == 1) {
+					this->GetPhysicsObject()->AddTorque({ 0,1,0 });
+				}
+				else
+				{
+					this->GetPhysicsObject()->AddTorque({ 0,-1,0 });
+				}
 		}
 
 		void faceTarget( GameObject* playerTarget) {
@@ -192,18 +156,168 @@ namespace NCL::CSC8503 {
 		}
 
 
+		int relativeLeftOrRightPosition(Vector3 targetPosition) {
+			Vector3 EnemyPosition = this->GetTransform().GetPosition();
+			//Vector2 EnemyRelativePosition = {  EnemyPosition.x, EnemyPosition.z}; //consider the enemy position as the origin
+			Vector3 EnemyRelativeDirectionPosition = ((this->GetTransform().GetOrientation()) * Vector3 { 0, 0, -1 });
+			Vector2 EnemyRelativePosition = { EnemyRelativeDirectionPosition.x, EnemyRelativeDirectionPosition.z };
+			float EnemyPositionGradient = EnemyRelativePosition.y / EnemyRelativePosition.x; // gradient of the cartiesian line going through the normalised direction vector and the origin
+			Vector2 TargetRelativePosition = { targetPosition.x - EnemyPosition.x,targetPosition.z - EnemyPosition.z }; // the target augmented in to space relative to the enemy
+			float interceptXPoint = (TargetRelativePosition.y * EnemyRelativePosition.x) / EnemyRelativePosition.y; // solve for the x value when a horisontal line from target intercepts
+			Vector2 iterceptionPoint = { interceptXPoint,TargetRelativePosition.y };
+			Vector2 targetToInterceptPoint = iterceptionPoint - TargetRelativePosition; // get the vector from target to intercep point to get the direction
+
+			if (targetToInterceptPoint.x > 0 && (EnemyRelativePosition.y >= 0)) {
+				return -1;
+			}
+			if (targetToInterceptPoint.x > 0 && (EnemyRelativePosition.y < 0)) {
+				return 1;
+			}
+			if (targetToInterceptPoint.x < 0 && (EnemyRelativePosition.y > 0)) {
+				return 1;
+			}
+
+			if (targetToInterceptPoint.x < 0 && (EnemyRelativePosition.y < 0)) {
+				return -1;
+			}
+			/*Vector3 EnemyDirectionVector = ((this->GetTransform().GetOrientation())*Vector3{0,0,-1}).Normalised();
+			return EnemyDirectionVector;*/
+			return 1;
+		}
+
+		//Enemy Ai movement
+
+		bool getEnemyDash() {
+			return enemyDash;
+		}
+
+		void toggleEnemyDash() {
+			enemyDash = !enemyDash;
+		}
+
+
+		void enemyMoveForward() {
+			Vector3 enemyDirectionVector = this->GetTransform().GetOrientation() * Vector3 { 0, 0, -1 };
+			this->GetPhysicsObject()->AddForce(enemyDirectionVector * 20.0f);
+		}
+
+		void enemyMoveBackwards(GameObject* enemyAI) {
+			Vector3 enemyDirectionVector = enemyAI->GetTransform().GetOrientation() * Vector3 { 0, 0, -1 };
+			enemyAI->GetPhysicsObject()->AddForce(enemyDirectionVector * -10.0f);
+		}
+
+		void enemyMoveRight() {
+			Vector3 enemyDirectionVector = this->GetTransform().GetOrientation() * Vector3 { 1, 0, 0 };
+			this->GetPhysicsObject()->AddForce(enemyDirectionVector * 100.0f);
+		}
+
+		void enemyMoveLeft() {
+			Vector3 enemyDirectionVector = this->GetTransform().GetOrientation() * Vector3 { -1, 0, 0 };
+			this->GetPhysicsObject()->AddForce(enemyDirectionVector * 100.0f);
+		}
+
+		void enemyJump() {
+			Vector3 enemyDirectionVector = this->GetTransform().GetOrientation() * Vector3 { 0, 1, 0 };
+			this->GetPhysicsObject()->AddForce(enemyDirectionVector * 1100.0f);
+		}
+
+		void enemyCharge() {
+			if (!(this->getEnemyDash())) {
+				return;
+			}
+			Vector3 enemyDirectionVector = this->GetTransform().GetOrientation() * Vector3 { 0, 0, -1 };
+			this->GetPhysicsObject()->AddForce(enemyDirectionVector * 5000.0f);
+			this->toggleEnemyDash();
+		}
+
+		void toggleEnemyCanFaint() {
+			enemyCanFaint = !enemyCanFaint;
+		}
+
+		void enemyFaint() {
+			if (enemyCanFaint) {
+				faintDirectionVector = this->GetTransform().GetOrientation() * Vector3 { 0, 0, -1 };
+				this->GetPhysicsObject()->AddForce(faintDirectionVector * 5000.0f);
+				faintStartPosition = this->GetTransform().GetPosition();
+				toggleEnemyCanFaint();
+				return;
+			}
+			if (((this->GetTransform().GetPosition()) - (faintStartPosition)).Length() > 3) {
+				this->GetPhysicsObject()->AddForce(faintDirectionVector * -10000.0f);
+				//toggleEnemyCanFaint();
+				return;
+			}
+		}
+
+
+		void enemySideDodge() {
+			int ranX = rand() % 10;
+			if (ranX >= 5) {
+				enemyMoveRight();
+				return;
+			}
+			enemyMoveLeft();
+		}
+
+		void moveToCentre() {
+			Vector3 directionToCentre = (centreSafteyCircle - this->GetTransform().GetPosition()).Normalised();
+			float distanceToCentre = directionToCentre.Length();
+			this->GetPhysicsObject()->AddForce(directionToCentre * (10 * distanceToCentre));
+		}
+
+		void updateEnemyAction() {
+			getPlayState();
+		}
+
+		void moveToTarget(GameObject* playerCharacter) {
+			Vector3 playerTargetPosition = playerCharacter->GetTransform().GetPosition();
+			float angle = getAngleObjectTarget(playerCharacter);
+			if (angle <= 0.2) {
+				setFacingPlayer(true);
+			}
+			else
+			{
+				setFacingPlayer(false);
+			}
+
+			if (getFacingPlayer()) {
+				enemyMoveForward();
+				return;
+			}
+			else
+			{
+				faceTarget(playerCharacter);
+			}
+		}
+		//Enemy Ai movement 
+
+
+		void getPlayState(){
+			playerTag->UpdateCurrentPosition();
+			playerTag->updateState();
+			cout <<"player Forward state " << playerTag->getPlayerForwardState() << endl;
+			cout << "player side state " << playerTag->getPlayerSideState() << endl;
+		}
+
 	protected:
 		const  Vector3 centreSafteyCircle = Vector3{0,-20,0};
+		Vector3 faintStartPosition = {};
+		Vector3 faintDirectionVector = {};
 		Vector3 prePlayerPositionCapture = {};
+
 		float distanceFromCentre = 0;
 		float agressionRadius = 10;
 		float agressionLevel = 0.5;
 		const float innerCircleRadius = 8;
 		const float outerCircleRadius = 15;
+
+		bool enemyCanFaint = true;
 		bool playerClose = false;
 		bool facingPlayer = false;
 		bool enemyDash = true;
 		bool insideAgressionRadius = false;
+
+		playerState *playerTag;
 	};
 
 }
