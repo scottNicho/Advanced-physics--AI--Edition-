@@ -7,11 +7,12 @@
 
 
 namespace NCL::CSC8503 {
-	playerState::playerState(GameObject* theEnemy) {
+	playerState::playerState(GameObject* theEnemy, GameObject* thePlayer) {
 		playerForwardState = still;
 		playerSideState = still_side;
-		playerTrack = nullptr;
+		playerTrack = thePlayer;
 		enemy = theEnemy;
+		setInitialPosition();
 		totalResponse = {
 			{"still_stillSide", still_stillSide},
             {"still_runRight", still_runRight},
@@ -38,7 +39,7 @@ namespace NCL::CSC8503 {
             {"jumpingBackwards_jumpRight", jumpingBackwards_jumpRight},
             {"jumpingBackwards_jumpLeft", jumpingBackwards_jumpLeft},
 		};
-	};
+	}
 
 
 
@@ -47,15 +48,22 @@ namespace NCL::CSC8503 {
 		response.sidewardsResponse = playerSideState;
 	}
 
-	void playerState::setCurrentPosition() {
+	void playerState::UpdateCurrentPosition() {
 		PreviousPosition = currentPosition;
-		Vector3 playerPos = this->GetTransform().GetPosition();
+		Vector3 playerPos = getPlayerTrack()->GetTransform().GetPosition();
 		Vector3 playerEnemyPos = playerPos - (enemy->GetTransform().GetPosition());
 		float PlayerDistEnemy = playerEnemyPos.Length();
 		float PlayerDistCentre = (playerPos - Vector3{ 0,-20,0 }).Length();
 		currentPosition = { playerPos,playerEnemyPos,PlayerDistEnemy,PlayerDistCentre };
 	}
 
+	void playerState::setInitialPosition() {
+		Vector3 playerPos = getPlayerTrack()->GetTransform().GetPosition();
+		Vector3 playerEnemyPos = playerPos - (enemy->GetTransform().GetPosition());
+		float PlayerDistEnemy = playerEnemyPos.Length();
+		float PlayerDistCentre = (playerPos - Vector3{ 0,-20,0 }).Length();
+		currentPosition = { playerPos,playerEnemyPos,PlayerDistEnemy,PlayerDistCentre };
+	}
 
 	void playerState::setIsPlayerJumping() {
 		if (currentPosition.playerPosition.y > PreviousPosition.playerPosition.y && currentPosition.playerPosition.y > 1) {
@@ -129,6 +137,9 @@ namespace NCL::CSC8503 {
 	}
 
 	void playerState::updateState() {
+		if (!updateFlag) {
+			return;
+		}
 		setIsPlayerJumping();
 		if (!getIsPlayerJumping()) {
 			updatePlayerForwardState();
