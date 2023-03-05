@@ -122,7 +122,7 @@ TutorialGame::~TutorialGame()	{
 //			return Success;
 //
 //		}
-//		return state; //will be ’ongoing ’ until success
+//		return state; //will be â€™ongoing â€™ until success
 //		}
 //	);
 //
@@ -138,7 +138,7 @@ TutorialGame::~TutorialGame()	{
 //				std::cout << "moved towards player" << std::endl;
 //				return Success;
 //			}
-//			return state; //will be ’ongoing ’ until success
+//			return state; //will be â€™ongoing â€™ until success
 //		}
 //	);
 //
@@ -236,7 +236,7 @@ TutorialGame::~TutorialGame()	{
 //		behaviourTimer = 0.0f;
 //		distanceToTarget = rand() % 250;
 //		BehaviourState state = Ongoing;
-//		std::cout << "We’re going on an adventure !\n";
+//		std::cout << "Weâ€™re going on an adventure !\n";
 //		while (state == Ongoing) {
 //			state = rootSequence->Execute(1.0f); //fake dt
 //
@@ -276,7 +276,7 @@ TutorialGame::~TutorialGame()	{
 //				}
 //				
 //			}
-//			 return state; //will be ’ongoing ’ until success
+//			 return state; //will be â€™ongoing â€™ until success
 //			 }
 //	);
 //
@@ -296,7 +296,7 @@ TutorialGame::~TutorialGame()	{
 //				 }
 //				 
 //			 }
-//			  return state; //will be ’ongoing ’ until success
+//			  return state; //will be â€™ongoing â€™ until success
 //			  }
 //	 );
 //	 BehaviourAction* openDoor = new BehaviourAction("Open Door",
@@ -463,6 +463,7 @@ int TutorialGame::UpdateGame(float dt) {//testing returning int
 	/*Debug::DrawLine(Vector3(world -> GetMainCamera()->GetPosition()) + Vector3(40,0,40), Vector3(0, 50, 100), Vector4(1, 1, 0, 1));*/
 	SelectObject();
 	MoveSelectedObject();
+	EnemyGoat->updateEnemyAction();
 	movePlayer(goatCharacter);
 	//bullet upadet
 	
@@ -899,7 +900,7 @@ EnemyAI* TutorialGame::AddEnemyGoatToWorld(const Vector3& position) {
 	float meshSize = 2.0f;
 	float inverseMass = 0.6f;
 
-	EnemyAI* BadGoat = new EnemyAI();
+	EnemyAI* BadGoat = new EnemyAI(goatCharacter);
 	AABBVolume* volume = new AABBVolume(Vector3{2,2,2});
 	BadGoat->SetBoundingVolume((CollisionVolume*)volume);
 	BadGoat->GetTransform().SetScale(Vector3(meshSize, meshSize, meshSize)).SetPosition(position);
@@ -1061,8 +1062,6 @@ void TutorialGame::movePlayer(playerTracking* unitGoat) {
 	rayDir = unitGoat->GetTransform().GetOrientation() * Vector3(0, -1, 0);
 	rayPos = unitGoat->GetTransform().GetPosition();
 	Ray r = Ray(rayPos, rayDir);
-	EnemyGoat->faceTarget(unitGoat);
-	EnemyGoat->relativeLeftOrRight(unitGoat);
 	RayCollision grounded;
 	if (world->Raycast(r, grounded, true)) {
 		/*if (objClosest) {
