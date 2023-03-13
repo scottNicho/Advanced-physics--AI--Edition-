@@ -6,7 +6,8 @@
 #include"Vector3.h"
 #include<cmath>
 #include<set>
-#include <unordered_map>
+#include <map>
+#include <array>
 
 
 
@@ -26,8 +27,21 @@ namespace NCL::CSC8503 {
 
 		};
 
+		struct ArrayCompare {
+			bool operator()(const std::array<int, 2>& a, const std::array<int, 2>& b) const {
+				if (a[0] < b[0]) {
+					return true;
+				}
+				else if (a[0] == b[0] && a[1] < b[1]) {
+					return true;
+				}
+				else {
+					return false;
+				}
+			}
+		};
 
-		
+
 		enum currentStateForward
 		{
 			still,
@@ -58,18 +72,30 @@ namespace NCL::CSC8503 {
 
 
 	
-		vector <totalState>& getResponseValue(string valueNeeded) {
-			return totalResponse[valueNeeded];
+		vector <totalState>& getResponseValue(std::array<int,2> arrayKey) {
+			return totalResponse[arrayKey];
 		}
 
-		void AddToTotalResponse(string vectorToRecieve) {//argument the vector you wish to add element too
-			if (getResponseValue(vectorToRecieve).size() > 20) {
-				getResponseValue(vectorToRecieve).pop_back();//checks if the vector is above size 20 if it is remove an element
+		/*vector <totalState>& getCurrentResponse() {
+			return totalResponse[response];
+		}*/
+
+		void AddToTotalResponse(std::array<int, 2> arrayToVector) {//argument the vector you wish to add element too
+			if (getResponseValue(arrayToVector).size() > 20) {
+				getResponseValue(arrayToVector).pop_back();//checks if the vector is above size 20 if it is remove an element
 			}
-			getResponseValue(vectorToRecieve).push_back(response);
+			getResponseValue(arrayToVector).push_back(response);
 		}
 
 		void updateResponse();
+
+		void updatePlayerForwardState();
+
+		void updatePlayerForwardStateJumping();
+
+		void updatePlayerSideState();
+
+		void updatePlayerSideStateJumping();
 
 		void UpdateCurrentPosition();
 
@@ -81,13 +107,7 @@ namespace NCL::CSC8503 {
 			return playerIsJumping;
 		}
 
-		void updatePlayerForwardState();
-
-		void updatePlayerForwardStateJumping();
-
-		void updatePlayerSideState();
-
-		void updatePlayerSideStateJumping();
+	
 
 		void setPlayerTrack(GameObject* thePlayer) {
 			playerTrack = thePlayer;
@@ -123,8 +143,28 @@ namespace NCL::CSC8503 {
 			updateFlag = !updateFlag;
 		}
 
+		PositionData getCurrentPosition() {
+			return currentPosition;
+		}
+
+		//speed stuff
+
+		float getPlayerSpeed() {
+			return playerSpeed;
+		}
+
+		void setPlayerSpeed(float time) {
+			Vector3 newPosition = playerTrack->GetTransform().GetPosition();
+			float distance = (oldPosition - newPosition).Length();
+			playerSpeed = distance / time;
+			oldPosition = newPosition;
+		}
+
+		//speed stuff
+
 	protected:
 
+		float playerSpeed;
 		bool updateFlag = false;
 		bool playerIsJumping = false;
 		currentStateForward playerForwardState;
@@ -134,9 +174,9 @@ namespace NCL::CSC8503 {
 		PositionData currentPosition;// compare these 2 to set the new state 
 		PositionData PreviousPosition;
 		//vector <totalState> totalResponse[24]= { still_stillSide,still_runRight,still_runLeft,still_jumpRight,still_jumpLeft,forwards_stillSide,forwards_runRight,forwards_runLeft,forwards_jumpRight,forwards_jumpLeft,backwards_stillSide,backwards_runRight,backwards_runLeft,backwards_jumpRight,backwards_jumpLeft,jumping_stillSide,jumping_jumpRight,jumping_jumpLeft,jumpingforward_stillSide,jumpingforward_jumpRight,jumpingforward_jumpLeft,jumpingBackwards_stillSide,jumpingBackwards_jumpRight,jumpingBackwards_jumpLeft };
-		std::unordered_map<std::string, std::vector<totalState>> totalResponse;
+		std::map< std::array<int,2>,std::vector<totalState>> totalResponse;
 		totalState response{};
-
+		Vector3 oldPosition{ 0,0,0 };
 
 		vector <totalState> still_stillSide;
 		vector <totalState> still_runRight;
