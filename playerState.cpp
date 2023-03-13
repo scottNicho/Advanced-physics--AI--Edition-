@@ -54,7 +54,7 @@ namespace NCL::CSC8503 {
 		Vector3 playerPos = getPlayerTrack()->GetTransform().GetPosition();
 		Vector3 playerEnemyPos = playerPos - (enemy->GetTransform().GetPosition());
 		float PlayerDistEnemy = playerEnemyPos.Length();
-		float PlayerDistCentre = (playerPos - Vector3{ 0,-20,0 }).Length();
+    	float PlayerDistCentre = (playerPos - Vector3{ 0,-20,0 }).Length();
 		currentPosition = { playerPos,playerEnemyPos,PlayerDistEnemy,PlayerDistCentre };
 	}
 
@@ -67,6 +67,8 @@ namespace NCL::CSC8503 {
 	}
 
 	void playerState::setIsPlayerJumping() {
+		std::cout << "previous position " << PreviousPosition.playerPosition.y << std::endl;
+		std::cout << "current position " << currentPosition.playerPosition.y << std::endl;
 		if (currentPosition.playerPosition.y > PreviousPosition.playerPosition.y && currentPosition.playerPosition.y > 1) {
 			playerIsJumping = true;
 			return;
