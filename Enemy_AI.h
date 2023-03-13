@@ -4,6 +4,7 @@
 #include "GameObject.h"
 #include<vector>
 #include"Vector3.h"
+#include"Vector2.h"
 #include<cmath>
 #include<set>
 #include"PhysicsObject.h"
@@ -20,18 +21,13 @@ namespace NCL::CSC8503 {
 	class EnemyAI :public GameObject {
 	public:
 
-		EnemyAI(GameObject* thePlayerPassthrough) {
-			playerTag = new playerState(this, thePlayerPassthrough);
-		}
+
+		EnemyAI(GameObject* thePlayerPassthrough);
 
 
-		~EnemyAI() {
-			playerTag;
-		}
+		~EnemyAI();
 
-		void preResponseCapture(GameObject* playerCap) {
-			prePlayerPositionCapture = playerCap->GetTransform().GetPosition();
-		}
+		void preResponseCapture(GameObject* playerCap); // sets the initial player position
 
 		playerState* getPlayerTag() {
 			return playerTag;
@@ -41,13 +37,13 @@ namespace NCL::CSC8503 {
 
 		
 
-		void UpdateDistanceFromCentre() {
-			distanceFromCentre = (Vector3{0,-20,0} - this->GetTransform().GetPosition()).Length();
+		void UpdateDistanceFromCentre(); //updates the enemy's distance from the centre 
+
+		void setPlayerClose(bool isClose) {
+			playerClose = isClose;
 		}
 
-		void togglePlayerClose() {
-			playerClose = (!playerClose);
-		}
+		void updatePlayerClose(); // sets the player to be close if within a certain range 
 
 		void setAggressionLevel(float newAgressionLevel) {
 			agressionLevel = newAgressionLevel;
@@ -69,121 +65,20 @@ namespace NCL::CSC8503 {
 			return insideAgressionRadius;
 		}
 
-		void updateInAgressionRadius() {
-			if (distanceFromCentre < agressionRadius) {
-				insideAgressionRadius =  true;
-			}
-			insideAgressionRadius = false;
-		}
+		void updateInAgressionRadius(); // sets the insideAgressionRadius bool to be true if within a certain range
 
-		float getAngleObjectTarget( GameObject* target) {
-			Vector3 targetObjectPosition = target->GetTransform().GetPosition();
-			Vector3 objectfacing = (this->GetTransform().GetOrientation() * Vector3 { 0, 0, -1 }).Normalised();
-			Vector3 objectToTarget = ((targetObjectPosition) - (this->GetTransform().GetPosition())).Normalised();
-			float dotProduct = Vector3::Dot(objectfacing, objectToTarget);
-			float angleBetween = acos(dotProduct / ((objectfacing.Length()) * (objectToTarget.Length())));
-			return angleBetween;
-		}
+		float getAngleObjectTarget(GameObject* target); //Returns the angle between the EnemyAI and the targeted gameObject
 
-		float getAngleToPosition(Vector3 position) {
-			Vector3 objectfacing = (this->GetTransform().GetOrientation() * Vector3 { 0, 0, -1 }).Normalised();
-			Vector3 objectToTarget = ((position)-(this->GetTransform().GetPosition())).Normalised();
-			float dotProduct = Vector3::Dot(objectfacing, objectToTarget);
-			float angleBetween = acos(dotProduct / ((objectfacing.Length()) * (objectToTarget.Length())));
-			return angleBetween;
-		}
+		float getAngleToPosition(Vector3 position);//Returns the angle between the enemy AI and A given position
 
-		bool facePosition(Vector3 anchorPosition) {
-			if (getAngleToPosition(anchorPosition) <= 0.2) {
-				return true;
-			}
-				if (relativeLeftOrRightPosition(anchorPosition) == 1) {
-					this->GetPhysicsObject()->AddTorque({ 0,1,0 });
-				}
-				else
-				{
-					this->GetPhysicsObject()->AddTorque({ 0,-1,0 });
-				}
-		}
+		bool facePosition(Vector3 anchorPosition); //The EnemyAI will turn to face the given position in the fastest way 
 
-		void faceTarget( GameObject* playerTarget) {
-			Vector3 playerTargetPosition = playerTarget->GetTransform().GetPosition();
-			float angle = getAngleObjectTarget(playerTarget);
-			if (angle <= 0.2) {
-				this->GetPhysicsObject()->ClearForces();
-				this->GetPhysicsObject()->SetAngularVelocity({0,0,0});
-				setFacingPlayer(true);
-				return;
-			}
-			if (relativeLeftOrRight(playerTarget) == 1) {
-				this->GetPhysicsObject()->AddTorque({ 0,1,0 });
-			}
-			else
-			{
-				this->GetPhysicsObject()->AddTorque({ 0,-1,0 });
-			}
+		void faceTarget(GameObject* playerTarget);//The EnemyAI will turn to face the given gameObject in the fastest way 
 
-		}
-
-		int relativeLeftOrRight(GameObject* targetPlayer) {
-			Vector3 EnemyPosition = this->GetTransform().GetPosition();
-			Vector3 TargetPosition = targetPlayer->GetTransform().GetPosition();
-			//Vector2 EnemyRelativePosition = {  EnemyPosition.x, EnemyPosition.z}; //consider the enemy position as the origin
-			Vector3 EnemyRelativeDirectionPosition = ((this->GetTransform().GetOrientation())*Vector3{0,0,-1});
-			Vector2 EnemyRelativePosition = { EnemyRelativeDirectionPosition.x, EnemyRelativeDirectionPosition.z };
-			float EnemyPositionGradient = EnemyRelativePosition.y / EnemyRelativePosition.x; // gradient of the cartiesian line going through the normalised direction vector and the origin
-			Vector2 TargetRelativePosition = {TargetPosition.x - EnemyPosition.x,TargetPosition.z - EnemyPosition.z}; // the target augmented in to space relative to the enemy
-			float interceptXPoint = (TargetRelativePosition.y * EnemyRelativePosition.x) / EnemyRelativePosition.y; // solve for the x value when a horisontal line from target intercepts
-			Vector2 iterceptionPoint = {interceptXPoint,TargetRelativePosition.y };
-			Vector2 targetToInterceptPoint = iterceptionPoint - TargetRelativePosition; // get the vector from target to intercep point to get the direction
-			
-			if (targetToInterceptPoint.x > 0 && (EnemyRelativePosition.y>= 0) ) {
-				return -1;
-			}
-			if (targetToInterceptPoint.x > 0 && (EnemyRelativePosition.y < 0)) {
-				return 1;
-			}
-			if (targetToInterceptPoint.x < 0 && (EnemyRelativePosition.y > 0)) {
-				return 1;
-			}
-
-			if (targetToInterceptPoint.x < 0 && (EnemyRelativePosition.y < 0)) {
-				return -1;
-			}
-			/*Vector3 EnemyDirectionVector = ((this->GetTransform().GetOrientation())*Vector3{0,0,-1}).Normalised();
-			return EnemyDirectionVector;*/
-			return 1;
-		}
+		int relativeLeftOrRight(GameObject* targetPlayer);//Returns 2 possible int values telling if it is faster to turn right or left to face the given gameObject
 
 
-		int relativeLeftOrRightPosition(Vector3 targetPosition) {
-			Vector3 EnemyPosition = this->GetTransform().GetPosition();
-			//Vector2 EnemyRelativePosition = {  EnemyPosition.x, EnemyPosition.z}; //consider the enemy position as the origin
-			Vector3 EnemyRelativeDirectionPosition = ((this->GetTransform().GetOrientation()) * Vector3 { 0, 0, -1 });
-			Vector2 EnemyRelativePosition = { EnemyRelativeDirectionPosition.x, EnemyRelativeDirectionPosition.z };
-			float EnemyPositionGradient = EnemyRelativePosition.y / EnemyRelativePosition.x; // gradient of the cartiesian line going through the normalised direction vector and the origin
-			Vector2 TargetRelativePosition = { targetPosition.x - EnemyPosition.x,targetPosition.z - EnemyPosition.z }; // the target augmented in to space relative to the enemy
-			float interceptXPoint = (TargetRelativePosition.y * EnemyRelativePosition.x) / EnemyRelativePosition.y; // solve for the x value when a horisontal line from target intercepts
-			Vector2 iterceptionPoint = { interceptXPoint,TargetRelativePosition.y };
-			Vector2 targetToInterceptPoint = iterceptionPoint - TargetRelativePosition; // get the vector from target to intercep point to get the direction
-
-			if (targetToInterceptPoint.x > 0 && (EnemyRelativePosition.y >= 0)) {
-				return -1;
-			}
-			if (targetToInterceptPoint.x > 0 && (EnemyRelativePosition.y < 0)) {
-				return 1;
-			}
-			if (targetToInterceptPoint.x < 0 && (EnemyRelativePosition.y > 0)) {
-				return 1;
-			}
-
-			if (targetToInterceptPoint.x < 0 && (EnemyRelativePosition.y < 0)) {
-				return -1;
-			}
-			/*Vector3 EnemyDirectionVector = ((this->GetTransform().GetOrientation())*Vector3{0,0,-1}).Normalised();
-			return EnemyDirectionVector;*/
-			return 1;
-		}
+		int relativeLeftOrRightPosition(Vector3 targetPosition);//Returns 2 possible int values telling if it is faster to turn right or left to face the given position
 
 		//Enemy Ai movement
 
@@ -227,6 +122,7 @@ namespace NCL::CSC8503 {
 			}
 			Vector3 enemyDirectionVector = this->GetTransform().GetOrientation() * Vector3 { 0, 0, -1 };
 			this->GetPhysicsObject()->AddForce(enemyDirectionVector * 5000.0f);
+			this->GetPhysicsObject()->AddForce(dashPredictionVector * 1000.0f);
 			this->toggleEnemyDash();
 		}
 
@@ -260,12 +156,16 @@ namespace NCL::CSC8503 {
 		}
 
 		void moveToCentre() {
+			int ranY = rand()%20;
 			Vector3 directionToCentre = (centreSafteyCircle - this->GetTransform().GetPosition()).Normalised();
 			float distanceToCentre = directionToCentre.Length();
 			this->GetPhysicsObject()->AddForce(directionToCentre * (10 * distanceToCentre));
+			if (ranY >= 15) {
+				enemyJump();
+			}
 		}
 
-		void updateEnemyAction() {
+		void disupdateEnemyAction() {
 			getPlayState();
 		}
 
@@ -299,11 +199,66 @@ namespace NCL::CSC8503 {
 			cout << "player side state " << playerTag->getPlayerSideState() << endl;
 		}
 
+		//State anlysis
+
+		float percentageFind(vector<playerState::totalState> gottenState, int indexNum) {
+			if (indexNum < 0 || indexNum >= gottenState.size()) {
+				return 0.0f;
+			}
+
+			int count = 0;
+			for (int i = 0; i < gottenState.size(); i++) {
+				if (gottenState[indexNum].forwardResponse == gottenState[i].forwardResponse && gottenState[indexNum].sidewardsResponse == gottenState[i].sidewardsResponse) {
+					count += 1;
+				}
+			}
+
+			return static_cast<float>(count) / gottenState.size();
+		}
+
+		playerState::totalState mostLikelyResponseFinder(vector<playerState::totalState> currentStateData) {
+			playerState::totalState mostLikelyresponse;
+			float highestPercentage = 0.0f;
+			if (currentStateData.size() == 0) {
+				return *blankResponse; 
+			}
+			for (int i = 0; i < currentStateData.size(); i++) {
+				float currentPercentage = percentageFind(currentStateData, i);
+				if (currentPercentage > highestPercentage) {
+					highestPercentage = currentPercentage;
+					mostLikelyresponse = currentStateData[i];
+				}
+			}
+			if (highestPercentage < 0.35) {
+				return *blankResponse;
+			}
+			else
+			{
+				return mostLikelyresponse;
+			}
+		}
+
+		//state analysis 
+		//state response 
+		void toggleResponseCapture() {
+			responseCapture = !responseCapture;
+		}
+
+		bool getResponseCapture() {
+			return responseCapture;
+		}
+
+		void setDashPredictionVector(Vector3 newDashVector) {
+			dashPredictionVector = newDashVector;
+		}
+		//state response
+
 	protected:
 		const  Vector3 centreSafteyCircle = Vector3{0,-20,0};
 		Vector3 faintStartPosition = {};
 		Vector3 faintDirectionVector = {};
 		Vector3 prePlayerPositionCapture = {};
+		Vector3 dashPredictionVector = {};
 
 		float distanceFromCentre = 0;
 		float agressionRadius = 10;
@@ -311,12 +266,14 @@ namespace NCL::CSC8503 {
 		const float innerCircleRadius = 8;
 		const float outerCircleRadius = 15;
 
+		bool responseCapture = false;
 		bool enemyCanFaint = true;
 		bool playerClose = false;
 		bool facingPlayer = false;
 		bool enemyDash = true;
 		bool insideAgressionRadius = false;
 
+		playerState::totalState *blankResponse; 
 		playerState *playerTag;
 	};
 
