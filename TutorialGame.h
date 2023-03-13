@@ -153,7 +153,7 @@ namespace NCL {
 
 			playerTracking* AddPlayerToWorld(const Vector3& position);
 			void TagPlayer(EnemyAI* EnemyToTag,playerTracking* playerToTag);
-			EnemyAI* AddEnemyGoatToWorld(const Vector3& position);
+			EnemyAI* AddEnemyGoatToWorld(const Vector3& position, GameObject* playerCharacter);
 			GameObject* AddEnemyToWorld(const Vector3& position);
 			GameObject* AddBonusToWorld(const Vector3& position);
 
