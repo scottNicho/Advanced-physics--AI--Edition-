@@ -42,7 +42,7 @@ TutorialGame::TutorialGame()	{
 	useGravity		= true;
 	inSelectionMode = false;
 	testStateObject = nullptr;
-	
+
 	objectpool = new ObjectPool<Projectile>();
 
 	InitialiseAssets();
@@ -89,6 +89,7 @@ TutorialGame::~TutorialGame()	{
 	delete renderer;
 	delete world;
 	delete amovement;
+	delete PlayerTrackTag;
 
 	delete objectpool;
 }
@@ -463,7 +464,7 @@ int TutorialGame::UpdateGame(float dt) {//testing returning int
 	/*Debug::DrawLine(Vector3(world -> GetMainCamera()->GetPosition()) + Vector3(40,0,40), Vector3(0, 50, 100), Vector4(1, 1, 0, 1));*/
 	SelectObject();
 	MoveSelectedObject();
-	EnemyGoat->updateEnemyAction();
+	EnemyGoat->faceTarget(goatCharacter);
 	movePlayer(goatCharacter);
 	//bullet upadet
 	
@@ -521,6 +522,25 @@ int TutorialGame::UpdateGame(float dt) {//testing returning int
 		//unsigned int numObjects = 
 		//world->RemoveGameObject();
 	}
+
+	
+
+	if (!PlayerTrackTag) {
+		return 0;
+	}
+	else if (PlayerTrackTag->getUpdateFlag())
+	{
+		TutorialGame::addToRunningStateUpdateTime(dt);
+		if (TutorialGame::RunningStateUpdateTimeTest()) {
+			PlayerTrackTag->toggleUpdateFlag();
+		}
+	}
+	
+	PlayerTrackTag->setPlayerSpeed(dt);
+
+	std::cout << PlayerTrackTag->getPlayerSpeed() << std::endl;
+	//std::cout << PlayerTrackTag->getUpdateFlag() << std::endl;
+
 	if(goatCharacter->getPlayerProjectile()->GetCanCharge()){
 		TutorialGame::addToRunningChargeTime(dt);
 		if (TutorialGame::chargeTimeLimitTest()) {
@@ -945,6 +965,10 @@ playerTracking* TutorialGame::AddPlayerToWorld(const Vector3& position) {
 	return character;
 }
 
+void TutorialGame::TagPlayer(EnemyAI* EnemyToTag, playerTracking* playerToTag) {
+	PlayerTrackTag = new playerState(EnemyToTag,playerToTag);
+}
+
 Projectile* TutorialGame::AddBulletToWorld(playerTracking* playableCharacter) {
 	if (playableCharacter->getBulletVectorSize() <= 200) {
 		return useNewBullet(playableCharacter);
@@ -1249,6 +1273,7 @@ void TutorialGame::InitMixedGridWorldtest(int numRows, int numCols, float rowSpa
 	StateGameObject* AddStateObjectToWorld(const Vector3& position );
 	playerTracking* player1 = AddPlayerToWorld(Vector3(-10, -10, 0));
 	movePlayer(player1);
+	TagPlayer(EnemyGoat,player1);
 	setLockedObject(player1);
 			Vector3 position1 = Vector3(0 * colSpacing, 10.0f, 0 * rowSpacing);
 			Vector3 position2 = Vector3(1 * colSpacing, 10.0f, 1 * -rowSpacing);
