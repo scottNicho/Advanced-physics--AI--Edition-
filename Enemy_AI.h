@@ -27,7 +27,7 @@ namespace NCL::CSC8503 {
 
 		~EnemyAI();
 
-		void preResponseCapture(GameObject* playerCap); // sets the initial player position
+		void preResponseCapture(); // sets the initial player position
 
 		playerState* getPlayerTag() {
 			return playerTag;
@@ -132,6 +132,8 @@ namespace NCL::CSC8503 {
 
 		void enemyFaint() {
 			if (enemyCanFaint) {
+				this->toggleResponseCapture();
+				this->preResponseCapture();
 				faintDirectionVector = this->GetTransform().GetOrientation() * Vector3 { 0, 0, -1 };
 				this->GetPhysicsObject()->AddForce(faintDirectionVector * 5000.0f);
 				faintStartPosition = this->GetTransform().GetPosition();
@@ -165,7 +167,7 @@ namespace NCL::CSC8503 {
 			}
 		}
 
-		void disupdateEnemyAction() {
+		void updateEnemyAction() {
 			getPlayState();
 		}
 
