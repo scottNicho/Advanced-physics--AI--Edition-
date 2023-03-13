@@ -13,31 +13,32 @@ namespace NCL::CSC8503 {
 		playerTrack = thePlayer;
 		enemy = theEnemy;
 		setInitialPosition();
-		totalResponse = {
-			{"still_stillSide", still_stillSide},
-            {"still_runRight", still_runRight},
-            {"still_runLeft", still_runLeft},
-            {"still_jumpRight", still_jumpRight},
-            {"still_jumpLeft", still_jumpLeft},
-            {"forwards_stillSide", forwards_stillSide},
-            {"forwards_runRight", forwards_runRight},
-            {"forwards_runLeft", forwards_runLeft},
-            {"forwards_jumpRight", forwards_jumpRight},
-            {"forwards_jumpLeft", forwards_jumpLeft},
-            {"backwards_stillSide", backwards_stillSide},
-            {"backwards_runRight", backwards_runRight},
-            {"backwards_runLeft", backwards_runLeft},
-            {"backwards_jumpRight", backwards_jumpRight},
-            {"backwards_jumpLeft", backwards_jumpLeft},
-            {"jumping_stillSide", jumping_stillSide},
-            {"jumping_jumpRight", jumping_jumpRight},
-            {"jumping_jumpLeft", jumping_jumpLeft},
-            {"jumpingforward_stillSide", jumpingforward_stillSide},
-            {"jumpingforward_jumpRight", jumpingforward_jumpRight},
-            {"jumpingforward_jumpLeft", jumpingforward_jumpLeft},
-            {"jumpingBackwards_stillSide", jumpingBackwards_stillSide},
-            {"jumpingBackwards_jumpRight", jumpingBackwards_jumpRight},
-            {"jumpingBackwards_jumpLeft", jumpingBackwards_jumpLeft},
+		oldPosition = thePlayer->GetTransform().GetPosition();
+		std::map<std::array<int, 2>, totalState, ArrayCompare> totalResponse{
+			{{0, 0}, {still, still_side}},
+            {{0, 1}, {still, run_right}},
+            {{0, 2}, {still, run_left}},
+            {{0, 3}, {still, jumping_right}},
+            {{0, 4}, {still, jumping_left}},
+            {{1, 0}, {forwards, still_side}},
+            {{1, 1}, {forwards, run_right}},
+            {{1, 2}, {forwards, run_left}},
+            {{1, 3}, {forwards, jumping_right}},
+            {{1, 4}, {forwards, jumping_left}},
+            {{2, 0}, {backwards, still_side}},
+            {{2, 1}, {backwards, run_right}},
+            {{2, 2}, {backwards, run_left}},
+            {{2, 3}, {backwards, jumping_right}},
+            {{2, 4}, {backwards, jumping_left}},
+            {{3, 0}, {jumping, still_side}},
+            {{3, 3}, {jumping, jumping_right}},
+            {{3, 4}, {jumping, jumping_left}},
+            {{4, 0}, {jumping_forwards, still_side}},
+            {{4, 3}, {jumping_forwards, jumping_right}},
+            {{4, 4}, {jumping_forwards, jumping_left}},
+            {{5, 0}, {jumping_backwards, still_side}},
+            {{5, 3}, {jumping_backwards, jumping_right}},
+            {{5, 4}, {jumping_backwards, jumping_left}}
 		};
 	}
 
