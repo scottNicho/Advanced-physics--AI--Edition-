@@ -165,7 +165,7 @@ namespace NCL::CSC8503 {
 	protected:
 
 		float playerSpeed;
-		bool updateFlag = false;
+		bool updateFlag = true;
 		bool playerIsJumping = false;
 		currentStateForward playerForwardState;
 		currentStateSideward playerSideState;
