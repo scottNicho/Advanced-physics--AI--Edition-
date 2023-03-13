@@ -11,6 +11,7 @@
 
 #include "ObjectPool.h"
 #include"Enemy_AI.h"
+#include"playerState.h"
 
 namespace NCL {
 	namespace CSC8503 {
@@ -84,6 +85,21 @@ namespace NCL {
 
 			//Charge Time
 
+			//UpdateStateTime
+			void addToRunningStateUpdateTime(float timeIncrement) {
+				runningStateUpdateTime += timeIncrement;
+			}
+
+			bool RunningStateUpdateTimeTest() {
+				if (runningStateUpdateTime >= stateUpdateTimeLimit) {
+					runningStateUpdateTime = 0;
+					return true;
+				}
+
+				return false;
+			};
+			//UpdateStateTime
+
 			void setEnemyGoat(EnemyAI* assignCharcter);
 
 		protected:
@@ -136,6 +152,7 @@ namespace NCL {
 			GameObject* AddPhantomBoxToWorld(const Vector3& position, Vector3 dimensions, float inverseMass);
 
 			playerTracking* AddPlayerToWorld(const Vector3& position);
+			void TagPlayer(EnemyAI* EnemyToTag,playerTracking* playerToTag);
 			EnemyAI* AddEnemyGoatToWorld(const Vector3& position);
 			GameObject* AddEnemyToWorld(const Vector3& position);
 			GameObject* AddBonusToWorld(const Vector3& position);
@@ -189,12 +206,16 @@ namespace NCL {
 			playerTracking* goatCharacter = nullptr;
 			EnemyAI* EnemyGoat = nullptr;
 			playerTracking* testplayer = nullptr;
+			playerState* PlayerTrackTag = nullptr;
 
 			const int bulletLifeLimit = 2;
 			const int bulletDeletionLimit = 5;
 			const int chargeTimeLimit = 3;
 			float runnigBulletTime = 0.0f;
 			float BulletDeleteTime = 0.0f;
+
+			const double stateUpdateTimeLimit = 1.5f;
+			float runningStateUpdateTime;
 
 			float runnigChargeTime = 0.0f;
 			float TotalChargeTime = 0.0f;
