@@ -528,17 +528,22 @@ int TutorialGame::UpdateGame(float dt) {//testing returning int
 	if (!PlayerTrackTag) {
 		return 0;
 	}
-	else if (PlayerTrackTag->getUpdateFlag())
+	else 
 	{
 		TutorialGame::addToRunningStateUpdateTime(dt);
 		if (TutorialGame::RunningStateUpdateTimeTest()) {
-			PlayerTrackTag->toggleUpdateFlag();
+			EnemyGoat->updateEnemyAction();
+			if (PlayerTrackTag->getUpdateFlag()) {
+				//response cap goes here
+				PlayerTrackTag->toggleUpdateFlag();
+			}
+			
 		}
 	}
 	
 	PlayerTrackTag->setPlayerSpeed(dt);
 
-	std::cout << PlayerTrackTag->getPlayerSpeed() << std::endl;
+	//std::cout << PlayerTrackTag->getPlayerSpeed() << std::endl;
 	//std::cout << PlayerTrackTag->getUpdateFlag() << std::endl;
 
 	if(goatCharacter->getPlayerProjectile()->GetCanCharge()){
@@ -916,11 +921,11 @@ void TutorialGame::setLockedObject(GameObject* goatPlayer){
 	lockedObject = goatPlayer;
 }
 
-EnemyAI* TutorialGame::AddEnemyGoatToWorld(const Vector3& position) {
+EnemyAI* TutorialGame::AddEnemyGoatToWorld(const Vector3& position,GameObject *playerCharacter) {
 	float meshSize = 2.0f;
 	float inverseMass = 0.6f;
 
-	EnemyAI* BadGoat = new EnemyAI(goatCharacter);
+	EnemyAI* BadGoat = new EnemyAI(playerCharacter);
 	AABBVolume* volume = new AABBVolume(Vector3{2,2,2});
 	BadGoat->SetBoundingVolume((CollisionVolume*)volume);
 	BadGoat->GetTransform().SetScale(Vector3(meshSize, meshSize, meshSize)).SetPosition(position);
@@ -1269,10 +1274,10 @@ void TutorialGame::InitMixedGridWorldtest(int numRows, int numCols, float rowSpa
 	float sphereRadius = 1.0f;
 	Vector3 cubeDims = Vector3(1, 1, 1);
 //	chainBallTest();
-	EnemyGoat = AddEnemyGoatToWorld(Vector3(10, -15, 10));
 	StateGameObject* AddStateObjectToWorld(const Vector3& position );
 	playerTracking* player1 = AddPlayerToWorld(Vector3(-10, -10, 0));
 	movePlayer(player1);
+	EnemyGoat = AddEnemyGoatToWorld(Vector3(10, -15, 10),player1);
 	TagPlayer(EnemyGoat,player1);
 	setLockedObject(player1);
 			Vector3 position1 = Vector3(0 * colSpacing, 10.0f, 0 * rowSpacing);
@@ -1290,9 +1295,9 @@ void TutorialGame::InitMixedGridWorldGoatStrip(int numRows, int numCols, float r
 	Vector3 cubeDims = Vector3(1, 1, 1);
 	Vector3 PhantomCubeDims = Vector3(10, 4, 4);
 	chainBallTest();
-	EnemyGoat = AddEnemyGoatToWorld(Vector3(10,-15,10));
 	playerTracking* player1 = AddPlayerToWorld(Vector3(-10, -10, 0));
 	movePlayer(player1);
+	EnemyGoat = AddEnemyGoatToWorld(Vector3(10, -15, 10),player1);
 	setLockedObject(player1);
 	Vector3 position1 = Vector3(0 * colSpacing, 10.0f, 0 * rowSpacing);
 	Vector3 position2 = Vector3(1 * colSpacing, 10.0f, 1 * -rowSpacing);
