@@ -464,8 +464,10 @@ int TutorialGame::UpdateGame(float dt) {//testing returning int
 	/*Debug::DrawLine(Vector3(world -> GetMainCamera()->GetPosition()) + Vector3(40,0,40), Vector3(0, 50, 100), Vector4(1, 1, 0, 1));*/
 	SelectObject();
 	MoveSelectedObject();
-	EnemyGoat->faceTarget(goatCharacter);
+	EnemyGoat->faceTarget();
+	//EnemyGoat->moveToTarget();
 	movePlayer(goatCharacter);
+	EnemyGoat->updateEnemyAction();
 	//bullet upadet
 	
 	//End bullet update
@@ -522,7 +524,7 @@ int TutorialGame::UpdateGame(float dt) {//testing returning int
 		//unsigned int numObjects = 
 		//world->RemoveGameObject();
 	}
-
+	
 	
 
 	if (!PlayerTrackTag) {
@@ -532,7 +534,6 @@ int TutorialGame::UpdateGame(float dt) {//testing returning int
 	{
 		TutorialGame::addToRunningStateUpdateTime(dt);
 		if (TutorialGame::RunningStateUpdateTimeTest()) {
-			EnemyGoat->updateEnemyAction();
 			if (PlayerTrackTag->getUpdateFlag()) {
 				//response cap goes here
 				PlayerTrackTag->toggleUpdateFlag();
@@ -946,7 +947,7 @@ EnemyAI* TutorialGame::AddEnemyGoatToWorld(const Vector3& position,GameObject *p
 
 playerTracking* TutorialGame::AddPlayerToWorld(const Vector3& position) {
 	float meshSize		= 2.0f;
-	float inverseMass	= 0.8f;
+	float inverseMass	= 0.9f;
 
 	playerTracking* character = new playerTracking();
 	AABBVolume* volume  = new AABBVolume(Vector3{2,2,2});
@@ -1157,7 +1158,7 @@ void TutorialGame::movePlayer(playerTracking* unitGoat) {
 
 GameObject* TutorialGame::AddEnemyToWorld(const Vector3& position) {
 	float meshSize		= 3.0f;
-	float inverseMass	= 10.0f;
+	float inverseMass	= 20.0f;
 
 	GameObject* character = new GameObject();
 
