@@ -8,7 +8,7 @@
 #include<set>
 #include <map>
 #include <array>
-
+#include"PhysicsObject.h"
 
 
 using namespace std;
