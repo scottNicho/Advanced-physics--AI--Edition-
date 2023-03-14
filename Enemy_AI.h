@@ -65,6 +65,14 @@ namespace NCL::CSC8503 {
 			return insideAgressionRadius;
 		}
 
+		bool getFaintMoveBackSwitch() {
+			return faintMoveBackSwitch;
+		}
+
+		void SetFaintMoveBackSwitch(bool onOff) {
+			faintMoveBackSwitch = onOff;
+		}
+
 		void updateInAgressionRadius(); // sets the insideAgressionRadius bool to be true if within a certain range
 
 		float getAngleObjectTarget(GameObject* target); //Returns the angle between the EnemyAI and the targeted gameObject
@@ -73,7 +81,7 @@ namespace NCL::CSC8503 {
 
 		bool facePosition(Vector3 anchorPosition); //The EnemyAI will turn to face the given position in the fastest way 
 
-		void faceTarget(GameObject* playerTarget);//The EnemyAI will turn to face the given gameObject in the fastest way 
+		void faceTarget();//The EnemyAI will turn to face the given gameObject in the fastest way 
 
 		int relativeLeftOrRight(GameObject* targetPlayer);//Returns 2 possible int values telling if it is faster to turn right or left to face the given gameObject
 
@@ -93,7 +101,7 @@ namespace NCL::CSC8503 {
 
 		void enemyMoveForward() {
 			Vector3 enemyDirectionVector = this->GetTransform().GetOrientation() * Vector3 { 0, 0, -1 };
-			this->GetPhysicsObject()->AddForce(enemyDirectionVector * 20.0f);
+			this->GetPhysicsObject()->AddForce(enemyDirectionVector * 2000.0f);
 		}
 
 		void enemyMoveBackwards(GameObject* enemyAI) {
@@ -138,11 +146,13 @@ namespace NCL::CSC8503 {
 				this->GetPhysicsObject()->AddForce(faintDirectionVector * 5000.0f);
 				faintStartPosition = this->GetTransform().GetPosition();
 				toggleEnemyCanFaint();
+				SetFaintMoveBackSwitch(true);
 				return;
 			}
-			if (((this->GetTransform().GetPosition()) - (faintStartPosition)).Length() > 3) {
-				this->GetPhysicsObject()->AddForce(faintDirectionVector * -10000.0f);
+			if ((((this->GetTransform().GetPosition()) - (faintStartPosition)).Length() > 3)&& getFaintMoveBackSwitch()) {
+				this->GetPhysicsObject()->AddForce(faintDirectionVector * -4900.0f);
 				//toggleEnemyCanFaint();
+				SetFaintMoveBackSwitch(false);
 				return;
 			}
 		}
@@ -168,10 +178,17 @@ namespace NCL::CSC8503 {
 		}
 
 		void updateEnemyAction() {
+			updatePlayerClose();
 			getPlayState();
+			//moveToTarget();
+			if (playerClose) {
+				//enemyCharge();
+				enemyFaint();
+			}
 		}
 
-		void moveToTarget(GameObject* playerCharacter) {
+		void moveToTarget() {
+			GameObject* playerCharacter = playerTag->getPlayerTrack();
 			Vector3 playerTargetPosition = playerCharacter->GetTransform().GetPosition();
 			float angle = getAngleObjectTarget(playerCharacter);
 			if (angle <= 0.2) {
@@ -188,7 +205,7 @@ namespace NCL::CSC8503 {
 			}
 			else
 			{
-				faceTarget(playerCharacter);
+				faceTarget();
 			}
 		}
 		//Enemy Ai movement 
@@ -274,6 +291,7 @@ namespace NCL::CSC8503 {
 		bool facingPlayer = false;
 		bool enemyDash = true;
 		bool insideAgressionRadius = false;
+		bool faintMoveBackSwitch = true; // in the Ai faint this switch stops the counter force being added repeatedly
 
 		playerState::totalState *blankResponse; 
 		playerState *playerTag;
