@@ -67,9 +67,9 @@ namespace NCL::CSC8503 {
 	}
 
 	void playerState::setIsPlayerJumping() {
-		std::cout << "previous position " << PreviousPosition.playerPosition.y << std::endl;
-		std::cout << "current position " << currentPosition.playerPosition.y << std::endl;
-		if (currentPosition.playerPosition.y > PreviousPosition.playerPosition.y && currentPosition.playerPosition.y > 1) {
+		/*std::cout << "previous position " << PreviousPosition.playerPosition.y << std::endl;
+		std::cout << "current position " << currentPosition.playerPosition.y << std::endl;*/
+		if (currentPosition.playerPosition.y > PreviousPosition.playerPosition.y && currentPosition.playerPosition.y > 0.1) {
 			playerIsJumping = true;
 			return;
 		}
@@ -114,12 +114,22 @@ namespace NCL::CSC8503 {
 	}
 
 	void playerState::updatePlayerSideState() {
-		float AnglePreviousCurrent = Vector3::Dot(PreviousPosition.relativePosition, currentPosition.relativePosition);//the angle between the players 2 positions relative to the player
-		if (AnglePreviousCurrent > 5) {
+		Vector3 preRelativeVec = PreviousPosition.relativePosition;
+		Vector3 currentRelativeVec = currentPosition.relativePosition;
+		float currentPreviousDotProduct = (Vector3::Dot(preRelativeVec, currentRelativeVec));//the dot product betweenn the two angles
+		double magnitudePrevRelative = (preRelativeVec.Length());
+		double magnitudeCurrentRelative = currentRelativeVec.Length();
+		double angle = acos(currentPreviousDotProduct / (magnitudePrevRelative * magnitudeCurrentRelative));
+		Vector3 crossVector = (Vector3::Cross(preRelativeVec, currentRelativeVec)).Normalised();
+		if (crossVector.y < 0) {
+			angle = -angle;
+		}
+
+		if (angle > 0.174) {
 			playerSideState = run_right;
 			return;
 		}
-		if (AnglePreviousCurrent < 5) {
+		if (angle < -0.174533) {
 			playerSideState = run_left;
 			return;
 		}
@@ -127,12 +137,22 @@ namespace NCL::CSC8503 {
 	}
 
 	void playerState::updatePlayerSideStateJumping() {
-		float AnglePreviousCurrent = Vector3::Dot(PreviousPosition.relativePosition, currentPosition.relativePosition);//the angle between the players 2 positions relative to teh player
-		if (AnglePreviousCurrent > 5) {
+		Vector3 preRelativeVec = PreviousPosition.relativePosition;
+		Vector3 currentRelativeVec = currentPosition.relativePosition;
+		float currentPreviousDotProduct = (Vector3::Dot(preRelativeVec, currentRelativeVec));//the dot product betweenn the two angles
+		double magnitudePrevRelative = (preRelativeVec.Length());
+		double magnitudeCurrentRelative = currentRelativeVec.Length();
+		double angle = acos(currentPreviousDotProduct / (magnitudePrevRelative * magnitudeCurrentRelative));
+		Vector3 crossVector = (Vector3::Cross(preRelativeVec, currentRelativeVec)).Normalised();
+		if (crossVector.y < 0) {
+			angle = -angle;
+		}
+
+		if (angle > 0.174) {
 			playerSideState = jumping_right;
 			return;
 		}
-		if (AnglePreviousCurrent < 5) {
+		if (angle < -0.174533) {
 			playerSideState = jumping_left;
 			return;
 		}
@@ -143,8 +163,7 @@ namespace NCL::CSC8503 {
 		if (!updateFlag) {
 			return;
 		}
-		setIsPlayerJumping();
-		if (!getIsPlayerJumping()) {
+		if ((playerTrack->GetPhysicsObject()->GetCanJump())) {
 			updatePlayerForwardState();
 			updatePlayerSideState();
 			updateResponse();
