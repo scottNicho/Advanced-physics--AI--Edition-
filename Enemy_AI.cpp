@@ -25,7 +25,7 @@ namespace NCL::CSC8503 {
 
 	void EnemyAI::updatePlayerClose() {
 		float distanceBetween = playerTag->getCurrentPosition().distanceFromEnemy;
-		if (distanceBetween < 10) {
+		if (distanceBetween < 12) {
 			setPlayerClose(true);
 		}
 		else
@@ -71,7 +71,8 @@ namespace NCL::CSC8503 {
 		}
 	}
 
-	void EnemyAI::faceTarget(GameObject* playerTarget) {
+	void EnemyAI::faceTarget() {
+		GameObject* playerTarget = playerTag->getPlayerTrack();
 		Vector3 playerTargetPosition = playerTarget->GetTransform().GetPosition();
 		float angle = getAngleObjectTarget(playerTarget);
 		if (angle <= 0.2) {
