@@ -133,6 +133,14 @@ namespace NCL::CSC8503 {
 			playerSideState = newState;
 		}
 
+		PositionData* GetTemporaryPosition() {
+			return temporaryPosition;
+		}
+
+		void SetTemporaryPosition(PositionData newTemporaryPosition) {
+			temporaryPosition = &newTemporaryPosition;
+		}
+
 		void updateState();
 
 		bool getUpdateFlag() {
@@ -173,6 +181,7 @@ namespace NCL::CSC8503 {
 		GameObject* enemy;
 		PositionData currentPosition;// compare these 2 to set the new state 
 		PositionData PreviousPosition;
+		PositionData *temporaryPosition = nullptr;
 		//vector <totalState> totalResponse[24]= { still_stillSide,still_runRight,still_runLeft,still_jumpRight,still_jumpLeft,forwards_stillSide,forwards_runRight,forwards_runLeft,forwards_jumpRight,forwards_jumpLeft,backwards_stillSide,backwards_runRight,backwards_runLeft,backwards_jumpRight,backwards_jumpLeft,jumping_stillSide,jumping_jumpRight,jumping_jumpLeft,jumpingforward_stillSide,jumpingforward_jumpRight,jumpingforward_jumpLeft,jumpingBackwards_stillSide,jumpingBackwards_jumpRight,jumpingBackwards_jumpLeft };
 		std::map< std::array<int,2>,std::vector<totalState>> totalResponse;
 		totalState response{};
