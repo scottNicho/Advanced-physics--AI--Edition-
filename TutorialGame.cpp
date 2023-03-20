@@ -466,8 +466,8 @@ int TutorialGame::UpdateGame(float dt) {//testing returning int
 	MoveSelectedObject();
 	EnemyGoat->faceTarget();
 	//EnemyGoat->moveToTarget();
-	movePlayer(goatCharacter);
-	EnemyGoat->updateEnemyAction();
+    movePlayer(goatCharacter);
+	EnemyGoat->updateEnemyAction(dt);
 	//bullet upadet
 	
 	//End bullet update
@@ -532,14 +532,18 @@ int TutorialGame::UpdateGame(float dt) {//testing returning int
 	}
 	else 
 	{
-		TutorialGame::addToRunningStateUpdateTime(dt);
-		if (TutorialGame::RunningStateUpdateTimeTest()) {
-			if (PlayerTrackTag->getUpdateFlag()) {
-				//response cap goes here
+		if (PlayerTrackTag->getUpdateFlag()) {
+			if (!PlayerTrackTag->GetTemporaryPosition()) {
+				PlayerTrackTag->SetTemporaryPosition(PlayerTrackTag->getCurrentPosition());
+			}
+			TutorialGame::addToRunningStateUpdateTime(dt);
+			if (TutorialGame::RunningStateUpdateTimeTest()) {
+				//capture after position and input into vector
 				PlayerTrackTag->toggleUpdateFlag();
 			}
 			
 		}
+	
 	}
 	
 	PlayerTrackTag->setPlayerSpeed(dt);
@@ -555,6 +559,20 @@ int TutorialGame::UpdateGame(float dt) {//testing returning int
 		}
 	}
 	
+
+	if (!EnemyGoat->GetEnemyCanFaint()) {
+		TutorialGame::AddToEnemyFaintTime(dt);
+		if (TutorialGame::EnemyFaintTest()) {
+			EnemyGoat->toggleEnemyCanFaint();
+		}
+	}
+
+	if (!EnemyGoat->GetEnemyDash()) {
+		TutorialGame::AddToEnemyChargeTime(dt);
+		if (TutorialGame::EnemyChargeTest()) {
+			EnemyGoat->toggleEnemyDash();
+		}
+	}
 
 	/*TutorialGame::addToBulletDeleteTime(dt);
 	if (TutorialGame::bulletDeleteTimeTest()) {
@@ -1273,7 +1291,7 @@ void TutorialGame::InitMixedGridWorld(int numRows, int numCols, float rowSpacing
 // modified 
 void TutorialGame::InitMixedGridWorldtest(int numRows, int numCols, float rowSpacing, float colSpacing) {
 	float sphereRadius = 1.0f;
-	Vector3 cubeDims = Vector3(1, 1, 1);
+	Vector3 cubeDims = Vector3(2, 2, 2);
 //	chainBallTest();
 	StateGameObject* AddStateObjectToWorld(const Vector3& position );
 	playerTracking* player1 = AddPlayerToWorld(Vector3(-10, -10, 0));
