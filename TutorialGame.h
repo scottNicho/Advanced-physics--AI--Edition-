@@ -16,7 +16,7 @@
 namespace NCL {
 	namespace CSC8503 {
 		class AgentMovement;
-		class TutorialGame		{
+		class TutorialGame {
 		public:
 			TutorialGame();
 			~TutorialGame();
@@ -52,7 +52,7 @@ namespace NCL {
 			void addToBulletDeleteTime(float timeIncrement) {
 				BulletDeleteTime += timeIncrement;
 			}
-			
+
 			void resetBulletDeleteTime() {
 				BulletDeleteTime = 0.0f;
 			}
@@ -84,6 +84,32 @@ namespace NCL {
 			}
 
 			//Charge Time
+			//Enemy charge/faint time
+			void AddToEnemyChargeTime(float timeIncrement) {
+				runningEnemyChargeTime += timeIncrement;
+			}
+
+			void AddToEnemyFaintTime(float timeIncrement) {
+				runningEnemyFaintTime += timeIncrement;
+			}
+
+			bool EnemyChargeTest() {
+				if (runningEnemyChargeTime >= enemyChargeFaintLimit) {
+					runningEnemyChargeTime = 0.0;
+					return true;
+				}
+				return false;
+			}
+
+			bool EnemyFaintTest(){
+				if (runningEnemyFaintTime >= enemyChargeFaintLimit) {
+					runningEnemyFaintTime = 0.0;
+					return true;
+				}
+				return false;
+			}
+
+			//Enemy charge/faint time
 
 			//UpdateStateTime
 			void addToRunningStateUpdateTime(float timeIncrement) {
@@ -213,6 +239,10 @@ namespace NCL {
 			const int chargeTimeLimit = 3;
 			float runnigBulletTime = 0.0f;
 			float BulletDeleteTime = 0.0f;
+
+			const double enemyChargeFaintLimit = 5.5;
+			float runningEnemyChargeTime = 0.0f;
+			float runningEnemyFaintTime = 0.0f;
 
 			const double stateUpdateTimeLimit = 1.5f;
 			float runningStateUpdateTime;
