@@ -90,7 +90,7 @@ namespace NCL::CSC8503 {
 
 		//Enemy Ai movement
 
-		bool getEnemyDash() {
+		bool GetEnemyDash() {
 			return enemyDash;
 		}
 
@@ -98,6 +98,12 @@ namespace NCL::CSC8503 {
 			enemyDash = !enemyDash;
 		}
 
+
+		void EnemyCloseOnPlayer() {
+			Vector3 enemyDirectionVector = this->GetTransform().GetOrientation() * Vector3 { 0, 0, -1 };
+			float distance = playerTag->getCurrentPosition().distanceFromEnemy;
+			this->GetPhysicsObject()->AddForce(enemyDirectionVector * (distance/1.3));
+		}
 
 		void enemyMoveForward() {
 			Vector3 enemyDirectionVector = this->GetTransform().GetOrientation() * Vector3 { 0, 0, -1 };
@@ -125,13 +131,17 @@ namespace NCL::CSC8503 {
 		}
 
 		void enemyCharge() {
-			if (!(this->getEnemyDash())) {
+			if (!(this->GetEnemyDash())) {
 				return;
 			}
 			Vector3 enemyDirectionVector = this->GetTransform().GetOrientation() * Vector3 { 0, 0, -1 };
 			this->GetPhysicsObject()->AddForce(enemyDirectionVector * 5000.0f);
 			this->GetPhysicsObject()->AddForce(dashPredictionVector * 1000.0f);
 			this->toggleEnemyDash();
+		}
+
+		bool GetEnemyCanFaint() {
+			return enemyCanFaint;
 		}
 
 		void toggleEnemyCanFaint() {
@@ -177,15 +187,6 @@ namespace NCL::CSC8503 {
 			}
 		}
 
-		void updateEnemyAction() {
-			updatePlayerClose();
-			getPlayState();
-			//moveToTarget();
-			if (playerClose) {
-				//enemyCharge();
-				enemyFaint();
-			}
-		}
 
 		void moveToTarget() {
 			GameObject* playerCharacter = playerTag->getPlayerTrack();
@@ -200,24 +201,44 @@ namespace NCL::CSC8503 {
 			}
 
 			if (getFacingPlayer()) {
-				enemyMoveForward();
+				faceTarget();
+				EnemyCloseOnPlayer();
 				return;
 			}
 			else
 			{
+				//steady();
 				faceTarget();
 			}
 		}
-		//Enemy Ai movement 
 
-
-		void getPlayState(){
-			playerTag->UpdateCurrentPosition();
-			playerTag->updateState();
-			cout <<"player Forward state " << playerTag->getPlayerForwardState() << endl;
-			cout << "player side state " << playerTag->getPlayerSideState() << endl;
+		void steady() {
+			this->GetPhysicsObject()->SetLinearVelocity(Vector3(0,0,0));
 		}
 
+		//Enemy Ai movement 
+		//Enemy AI control
+		void updateEnemyAction(float time) {
+			updatePlayerClose();
+			getPlayState(time);
+			moveToTarget();
+			if (playerClose) {
+				//enemyCharge();
+				enemyFaint();
+			}
+		}
+		//Enemy AI control
+		//Player Info
+		void getPlayState(float time){
+			playerTag->setPlayerSpeed(time);
+			playerTag->UpdateCurrentPosition();
+			playerTag->updateState();
+			/*cout <<"player Forward state " << playerTag->getPlayerForwardState() << endl;
+			cout << "player side state " << playerTag->getPlayerSideState() << endl;*/
+		}
+		//Player info
+		 
+		
 		//State anlysis
 
 		float percentageFind(vector<playerState::totalState> gottenState, int indexNum) {
@@ -271,7 +292,9 @@ namespace NCL::CSC8503 {
 			dashPredictionVector = newDashVector;
 		}
 		//state response
+		//EnemyAI master control
 
+		//EnemyAI master control
 	protected:
 		const  Vector3 centreSafteyCircle = Vector3{0,-20,0};
 		Vector3 faintStartPosition = {};
