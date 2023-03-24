@@ -467,7 +467,7 @@ int TutorialGame::UpdateGame(float dt) {//testing returning int
 	EnemyGoat->faceTarget();
 	//EnemyGoat->moveToTarget();
     movePlayer(goatCharacter);
-	EnemyGoat->updateEnemyAction(dt);
+	EnemyGoat->UpdateEnemyLive();
 	//bullet upadet
 	
 	//End bullet update
@@ -533,13 +533,20 @@ int TutorialGame::UpdateGame(float dt) {//testing returning int
 	else 
 	{
 		if (PlayerTrackTag->getUpdateFlag()) {
-			if (!PlayerTrackTag->GetTemporaryPosition()) {
-				PlayerTrackTag->SetTemporaryPosition(PlayerTrackTag->getCurrentPosition());
-			}
+			
 			TutorialGame::addToRunningStateUpdateTime(dt);
 			if (TutorialGame::RunningStateUpdateTimeTest()) {
+				PlayerTrackTag->updateResponse();
+				EnemyGoat->updateEnemyAction(dt);
+				if (!PlayerTrackTag->GetTemporaryState() && PlayerTrackTag) {
+					PlayerTrackTag->SetTemporaryState();
+				}
+				if (EnemyGoat->getResponseCapture() && PlayerTrackTag->GetTemporaryState()) {
+					PlayerTrackTag->AddToTotalResponse({PlayerTrackTag->GetTemporaryState()->forwardResponse,PlayerTrackTag->GetTemporaryState()->sidewardsResponse } );
+					EnemyGoat->SetResponseCapture(false);
+				}
 				//capture after position and input into vector
-				PlayerTrackTag->toggleUpdateFlag();
+				//PlayerTrackTag->toggleUpdateFlag();
 			}
 			
 		}
@@ -615,6 +622,10 @@ void TutorialGame::UpdateKeys() {
 
 	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::R)) {
 		InitCamera(); //F2 will reset the camera to a specific default place
+	}
+
+	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::Z)) {
+		EnemyGoat->SetResponseCapture(true); //F2 will reset the camera to a specific default place
 	}
 
 	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::G)) {
