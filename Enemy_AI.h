@@ -102,7 +102,7 @@ namespace NCL::CSC8503 {
 		void EnemyCloseOnPlayer() {
 			Vector3 enemyDirectionVector = this->GetTransform().GetOrientation() * Vector3 { 0, 0, -1 };
 			float distance = playerTag->getCurrentPosition().distanceFromEnemy;
-			this->GetPhysicsObject()->AddForce(enemyDirectionVector * (distance/1.3));
+			this->GetPhysicsObject()->AddForce(enemyDirectionVector * 60);
 		}
 
 		void enemyMoveForward() {
@@ -150,7 +150,7 @@ namespace NCL::CSC8503 {
 
 		void enemyFaint() {
 			if (enemyCanFaint) {
-				this->toggleResponseCapture();
+				this->SetResponseCapture(true);
 				this->preResponseCapture();
 				faintDirectionVector = this->GetTransform().GetOrientation() * Vector3 { 0, 0, -1 };
 				this->GetPhysicsObject()->AddForce(faintDirectionVector * 5000.0f);
@@ -219,22 +219,26 @@ namespace NCL::CSC8503 {
 		//Enemy Ai movement 
 		//Enemy AI control
 		void updateEnemyAction(float time) {
-			updatePlayerClose();
 			getPlayState(time);
-			moveToTarget();
 			if (playerClose) {
 				//enemyCharge();
 				enemyFaint();
 			}
 		}
 		//Enemy AI control
+		void UpdateEnemyLive() {
+			updatePlayerClose();
+			moveToTarget();
+		}
+
+
 		//Player Info
 		void getPlayState(float time){
 			playerTag->setPlayerSpeed(time);
 			playerTag->UpdateCurrentPosition();
 			playerTag->updateState();
-			/*cout <<"player Forward state " << playerTag->getPlayerForwardState() << endl;
-			cout << "player side state " << playerTag->getPlayerSideState() << endl;*/
+			cout <<"player Forward state " << playerTag->getPlayerForwardState() << endl;
+			cout << "player side state " << playerTag->getPlayerSideState() << endl;
 		}
 		//Player info
 		 
@@ -280,8 +284,8 @@ namespace NCL::CSC8503 {
 
 		//state analysis 
 		//state response 
-		void toggleResponseCapture() {
-			responseCapture = !responseCapture;
+		void SetResponseCapture(bool capture) {
+			responseCapture = capture;
 		}
 
 		bool getResponseCapture() {
