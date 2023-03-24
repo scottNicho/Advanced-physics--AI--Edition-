@@ -12,6 +12,10 @@ namespace NCL::CSC8503 {
 		playerSideState = still_side;
 		playerTrack = thePlayer;
 		enemy = theEnemy;
+		temporaryState = new totalState();
+		currentState = new totalState();
+		currentState->forwardResponse = currentStateForward::non_forward;
+		currentState->sidewardsResponse = currentStateSideward::non_side;
 		setInitialPosition();
 		oldPosition = thePlayer->GetTransform().GetPosition();
 		std::map<std::array<int, 2>, totalState, ArrayCompare> totalResponse{
@@ -42,7 +46,10 @@ namespace NCL::CSC8503 {
 		};
 	}
 
-
+	playerState::~playerState() {
+		delete currentState;
+		delete temporaryState;
+	}
 
 	void playerState::updateResponse() {
 		response.forwardResponse = playerForwardState;
@@ -166,14 +173,16 @@ namespace NCL::CSC8503 {
 		if ((playerTrack->GetPhysicsObject()->GetCanJump())) {
 			updatePlayerForwardState();
 			updatePlayerSideState();
-			updateResponse();
+			UpdateCurrentState();
+			//updateResponse();
 			return;
 		}
 		else
 		{
 			updatePlayerForwardStateJumping();
 			updatePlayerSideStateJumping();
-			updateResponse();
+			UpdateCurrentState();
+			//updateResponse();
 		}
 
 	}
