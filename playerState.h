@@ -18,6 +18,8 @@ namespace NCL::CSC8503 {
 
 		playerState(GameObject* theEnemy, GameObject* thePlayer);
 
+		~playerState();
+
 		struct PositionData
 		{
 			Vector3 playerPosition;
@@ -80,7 +82,7 @@ namespace NCL::CSC8503 {
 			return totalResponse[response];
 		}*/
 
-		void AddToTotalResponse(std::array<int, 2> arrayToVector) {//argument the vector you wish to add element too
+		void AddToTotalResponse(std::array<int, 2> arrayToVector) {//augment the vector you wish to add element too
 			if (getResponseValue(arrayToVector).size() > 20) {
 				getResponseValue(arrayToVector).pop_back();//checks if the vector is above size 20 if it is remove an element
 			}
@@ -141,7 +143,25 @@ namespace NCL::CSC8503 {
 			temporaryPosition = &newTemporaryPosition;
 		}
 
+		totalState* GetTemporaryState() {
+			return temporaryState;
+		}
+
+		void SetTemporaryState() {
+			temporaryState = currentState;
+		}
+
 		void updateState();
+
+		totalState* GetCurrentState() {
+			return currentState;
+		}
+
+		void UpdateCurrentState() {
+			if (!playerForwardState || !playerSideState ) { return; }
+			currentState->forwardResponse = playerForwardState;
+			currentState->sidewardsResponse = playerSideState;
+		}
 
 		bool getUpdateFlag() {
 			return updateFlag;
@@ -177,11 +197,13 @@ namespace NCL::CSC8503 {
 		bool playerIsJumping = false;
 		currentStateForward playerForwardState;
 		currentStateSideward playerSideState;
+		totalState* currentState;
 		GameObject* playerTrack;
 		GameObject* enemy;
 		PositionData currentPosition;// compare these 2 to set the new state 
 		PositionData PreviousPosition;
 		PositionData *temporaryPosition = nullptr;
+		totalState* temporaryState = nullptr;
 		//vector <totalState> totalResponse[24]= { still_stillSide,still_runRight,still_runLeft,still_jumpRight,still_jumpLeft,forwards_stillSide,forwards_runRight,forwards_runLeft,forwards_jumpRight,forwards_jumpLeft,backwards_stillSide,backwards_runRight,backwards_runLeft,backwards_jumpRight,backwards_jumpLeft,jumping_stillSide,jumping_jumpRight,jumping_jumpLeft,jumpingforward_stillSide,jumpingforward_jumpRight,jumpingforward_jumpLeft,jumpingBackwards_stillSide,jumpingBackwards_jumpRight,jumpingBackwards_jumpLeft };
 		std::map< std::array<int,2>,std::vector<totalState>> totalResponse;
 		totalState response{};
