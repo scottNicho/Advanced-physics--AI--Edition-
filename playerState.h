@@ -157,11 +157,7 @@ namespace NCL::CSC8503 {
 			return currentState;
 		}
 
-		void UpdateCurrentState() {
-			if (!playerForwardState || !playerSideState ) { return; }
-			currentState->forwardResponse = playerForwardState;
-			currentState->sidewardsResponse = playerSideState;
-		}
+		void UpdateCurrentState();
 
 		bool getUpdateFlag() {
 			return updateFlag;
@@ -181,17 +177,16 @@ namespace NCL::CSC8503 {
 			return playerSpeed;
 		}
 
-		void setPlayerSpeed(float time) {
-			Vector3 newPosition = playerTrack->GetTransform().GetPosition();
-			float distance = (oldPosition - newPosition).Length();
-			playerSpeed = distance / time;
-			oldPosition = newPosition;
-		}
+		void setPlayerSpeed(float time);
 
+		std::map<std::array<int, 2>, std::vector<totalState>, ArrayCompare> GetTotalResponse() {
+			return totalResponse;
+		}
 		//speed stuff
 
 	protected:
 
+		int testSize = totalResponse.size();
 		float playerSpeed;
 		bool updateFlag = true;
 		bool playerIsJumping = false;
@@ -205,7 +200,7 @@ namespace NCL::CSC8503 {
 		PositionData *temporaryPosition = nullptr;
 		totalState* temporaryState = nullptr;
 		//vector <totalState> totalResponse[24]= { still_stillSide,still_runRight,still_runLeft,still_jumpRight,still_jumpLeft,forwards_stillSide,forwards_runRight,forwards_runLeft,forwards_jumpRight,forwards_jumpLeft,backwards_stillSide,backwards_runRight,backwards_runLeft,backwards_jumpRight,backwards_jumpLeft,jumping_stillSide,jumping_jumpRight,jumping_jumpLeft,jumpingforward_stillSide,jumpingforward_jumpRight,jumpingforward_jumpLeft,jumpingBackwards_stillSide,jumpingBackwards_jumpRight,jumpingBackwards_jumpLeft };
-		std::map< std::array<int,2>,std::vector<totalState>> totalResponse;
+		std::map<std::array<int, 2>, std::vector<totalState>, ArrayCompare> totalResponse;
 		totalState response{};
 		Vector3 oldPosition{ 0,0,0 };
 
