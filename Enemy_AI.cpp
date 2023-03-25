@@ -13,6 +13,7 @@ namespace NCL::CSC8503 {
 
 	EnemyAI::~EnemyAI() {
 		playerTag;
+		blankResponse;
 	}
 
 	void EnemyAI::preResponseCapture() { //Set the initial position
@@ -27,6 +28,7 @@ namespace NCL::CSC8503 {
 		float distanceBetween = playerTag->getCurrentPosition().distanceFromEnemy;
 		if (distanceBetween < 12) {
 			setPlayerClose(true);
+			steady(); 
 		}
 		else
 		{
@@ -148,5 +150,366 @@ namespace NCL::CSC8503 {
 		/*Vector3 EnemyDirectionVector = ((this->GetTransform().GetOrientation())*Vector3{0,0,-1}).Normalised();
 		return EnemyDirectionVector;*/
 		return 1;
+	}
+
+	void EnemyAI::EnemyCloseOnPlayer() {
+		Vector3 enemyDirectionVector = this->GetTransform().GetOrientation() * Vector3 { 0, 0, -1 };
+		float distance = playerTag->getCurrentPosition().distanceFromEnemy;
+		this->GetPhysicsObject()->AddForce(enemyDirectionVector * 10 * (distance / 3));
+	}
+
+	void EnemyAI::enemyMoveForward() {
+		Vector3 enemyDirectionVector = this->GetTransform().GetOrientation() * Vector3 { 0, 0, -1 };
+		this->GetPhysicsObject()->AddForce(enemyDirectionVector * 2000.0f);
+	}
+
+	void EnemyAI::enemyMoveBackwards(GameObject* enemyAI) {
+		Vector3 enemyDirectionVector = enemyAI->GetTransform().GetOrientation() * Vector3 { 0, 0, -1 };
+		enemyAI->GetPhysicsObject()->AddForce(enemyDirectionVector * -10.0f);
+	}
+
+	void EnemyAI::enemyMoveRight() {
+		Vector3 enemyDirectionVector = this->GetTransform().GetOrientation() * Vector3 { 1, 0, 0 };
+		this->GetPhysicsObject()->AddForce(enemyDirectionVector * 100.0f);
+	}
+
+	void EnemyAI::enemyMoveLeft() {
+		Vector3 enemyDirectionVector = this->GetTransform().GetOrientation() * Vector3 { -1, 0, 0 };
+		this->GetPhysicsObject()->AddForce(enemyDirectionVector * 100.0f);
+	}
+
+	void EnemyAI::enemyJump() {
+		Vector3 enemyDirectionVector = this->GetTransform().GetOrientation() * Vector3 { 0, 1, 0 };
+		this->GetPhysicsObject()->AddForce(enemyDirectionVector * 1100.0f);
+	}
+
+	void EnemyAI::enemyCharge() {
+		if (!(this->GetEnemyDash())) {
+			return;
+		}
+		Vector3 enemyDirectionVector = this->GetTransform().GetOrientation() * Vector3 { 0, 0, -1 };
+		this->GetPhysicsObject()->AddForce(enemyDirectionVector * 5000.0f);
+		this->GetPhysicsObject()->AddForce(dashPredictionVector * 1000.0f);
+		this->toggleEnemyDash();
+	}
+
+	void EnemyAI::enemyFaint() {
+		if (enemyCanFaint) {
+			this->SetResponseCapture(true);
+			this->preResponseCapture();
+			faintDirectionVector = this->GetTransform().GetOrientation() * Vector3 { 0, 0, -1 };
+			this->GetPhysicsObject()->AddForce(faintDirectionVector * 5000.0f);
+			faintStartPosition = this->GetTransform().GetPosition();
+			toggleEnemyCanFaint();
+			SetFaintMoveBackSwitch(true);
+			return;
+		}
+		if ((((this->GetTransform().GetPosition()) - (faintStartPosition)).Length() > 3) && getFaintMoveBackSwitch()) {
+			this->GetPhysicsObject()->AddForce(faintDirectionVector * -4900.0f);
+			//toggleEnemyCanFaint();
+			SetFaintMoveBackSwitch(false);
+			return;
+		}
+	}
+
+	void EnemyAI::enemySideDodge() {
+		int ranX = rand() % 10;
+		if (ranX >= 5) {
+			enemyMoveRight();
+			return;
+		}
+		enemyMoveLeft();
+	}
+
+	void EnemyAI::moveToCentre() {
+		int ranY = rand() % 20;
+		Vector3 directionToCentre = (centreSafteyCircle - this->GetTransform().GetPosition()).Normalised();
+		float distanceToCentre = directionToCentre.Length();
+		this->GetPhysicsObject()->AddForce(directionToCentre * (10 * distanceToCentre));
+		if (ranY >= 15) {
+			enemyJump();
+		}
+	}
+
+	void EnemyAI::moveToTarget() {
+		GameObject* playerCharacter = playerTag->getPlayerTrack();
+		Vector3 playerTargetPosition = playerCharacter->GetTransform().GetPosition();
+		float angle = getAngleObjectTarget(playerCharacter);
+		if (angle <= 0.2) {
+			setFacingPlayer(true);
+		}
+		else
+		{
+			setFacingPlayer(false);
+		}
+
+		if (getFacingPlayer()) {
+			faceTarget();
+			EnemyCloseOnPlayer();
+			return;
+		}
+		else
+		{
+			//steady();
+			faceTarget();
+		}
+	}
+
+	void EnemyAI::steady() {
+		Vector3 reducedVelocity = (this->GetPhysicsObject()->GetLinearVelocity()) * 0.1;
+		this->GetPhysicsObject()->SetLinearVelocity(reducedVelocity);
+	}
+
+	void EnemyAI::UpdateEnemyLive() {
+		updatePlayerClose();
+		moveToTarget();
+	}
+
+	void EnemyAI::getPlayState(float time) {
+		playerTag->setPlayerSpeed(time);
+		playerTag->UpdateCurrentPosition();
+		playerTag->updateState();
+		cout << "player Forward state " << playerTag->getPlayerForwardState() << endl;
+		cout << "player side state " << playerTag->getPlayerSideState() << endl;
+	}
+
+	float EnemyAI::percentageFind(vector<playerState::totalState> gottenState, int indexNum) {
+		if (indexNum < 0 || indexNum >= gottenState.size()) {
+			return 0.0f;
+		}
+
+		int count = 0;
+		for (int i = 0; i < gottenState.size(); i++) {
+			if (gottenState[indexNum].forwardResponse == gottenState[i].forwardResponse && gottenState[indexNum].sidewardsResponse == gottenState[i].sidewardsResponse) {
+				count += 1;
+			}
+		}
+
+		return static_cast<float>(count) / gottenState.size();
+	}
+
+	playerState::totalState EnemyAI::mostLikelyResponseFinder() {
+		vector<playerState::totalState> currentStateData = playerTag->getResponseValue({ (playerTag->GetCurrentState()->forwardResponse),(playerTag->GetCurrentState()->sidewardsResponse) });
+		playerState::totalState mostLikelyresponse;
+		std::cout << "total response size " << playerTag->GetTotalResponse().size() << std::endl;
+		float highestPercentage = 0.0f;
+		if (currentStateData.size() == 0) {
+			return *blankResponse;
+		}
+		for (int i = 0; i < currentStateData.size(); i++) {
+			float currentPercentage = percentageFind(currentStateData, i);
+			if (currentPercentage > highestPercentage) {
+				highestPercentage = currentPercentage;
+				mostLikelyresponse = currentStateData[i];
+			}
+		}
+		if (highestPercentage < 0.35) {
+			return *blankResponse;
+		}
+		else
+		{
+			return mostLikelyresponse;
+		}
+	}
+
+	void EnemyAI::SetDashPredictionVector(playerState::totalState responsePrimer) {
+
+		switch (responsePrimer.forwardResponse) {
+		case 0:
+			ReadyToChargeStill(responsePrimer.sidewardsResponse);
+			break;
+		case 1:
+			ReadyToChargeForward(responsePrimer.sidewardsResponse);
+			break;
+		case 2:
+			ReadyToChargeBackwards(responsePrimer.sidewardsResponse);
+			break;
+		case 3:
+			ReadyToChargeJumpingInPlace(responsePrimer.sidewardsResponse);
+			break;
+		case 4:
+			ReadyToChargeJumpingForward(responsePrimer.sidewardsResponse);
+			break;
+		case 5:
+			ReadyToChargeJumpingBackwards(responsePrimer.sidewardsResponse);
+			break;
+		}
+	}
+
+	void EnemyAI::ReadyToChargeStill(int sideValue) {
+		switch (sideValue) {
+		case 0:
+			dashPredictionVector.x = 0;
+			dashPredictionVector.y = 0;
+			dashPredictionVector.z = 0;
+			dashPredictionVector *= (playerTag->getPlayerSpeed());
+			break;
+
+		case 1:
+			dashPredictionVector.x = -2;
+			dashPredictionVector.y = 0;
+			dashPredictionVector.z = 0;
+			dashPredictionVector *= (playerTag->getPlayerSpeed());
+			break;
+		case 2:
+			dashPredictionVector.x = -2;
+			dashPredictionVector.y = 0;
+			dashPredictionVector.z = 0;
+			dashPredictionVector *= (playerTag->getPlayerSpeed());
+			break;
+		case 3:
+			dashPredictionVector.x = -2;
+			dashPredictionVector.y = 10;
+			dashPredictionVector.z = 0;
+			dashPredictionVector *= (playerTag->getPlayerSpeed());
+			break;
+		case 4:
+			dashPredictionVector.x = 2;
+			dashPredictionVector.y = 10;
+			dashPredictionVector.z = 0;
+			dashPredictionVector *= (playerTag->getPlayerSpeed());
+			break;
+		}
+
+
+	}
+
+	void EnemyAI::ReadyToChargeForward(int sideValue) {
+		switch (sideValue) {
+		case 0:
+			dashPredictionVector.x = 0;
+			dashPredictionVector.y = 0;
+			dashPredictionVector.z = 0;
+			dashPredictionVector *= (playerTag->getPlayerSpeed());
+			break;
+		case 1:
+			dashPredictionVector.x = -1;
+			dashPredictionVector.y = 0;
+			dashPredictionVector.z = 0;
+			dashPredictionVector *= (playerTag->getPlayerSpeed());
+			break;
+		case 2:
+			dashPredictionVector.x = 1;
+			dashPredictionVector.y = 0;
+			dashPredictionVector.z = 0;
+			dashPredictionVector *= (playerTag->getPlayerSpeed());
+			break;
+		case 3:
+			dashPredictionVector.x = -1;
+			dashPredictionVector.y = 10;
+			dashPredictionVector.z = 0;
+			dashPredictionVector *= (playerTag->getPlayerSpeed());
+			break;
+		case 4:
+			dashPredictionVector.x = 1;
+			dashPredictionVector.y = 10;
+			dashPredictionVector.z = 0;
+			dashPredictionVector *= (playerTag->getPlayerSpeed());
+			break;
+		}
+	}
+
+	void EnemyAI::ReadyToChargeBackwards(int sideValue) {
+		switch (sideValue) {
+		case 0:
+			dashPredictionVector.x = 0;
+			dashPredictionVector.y = 0;
+			dashPredictionVector.z = 0;
+			dashPredictionVector *= (playerTag->getPlayerSpeed());
+			break;
+		case 1:
+			dashPredictionVector.x = -3;
+			dashPredictionVector.y = 0;
+			dashPredictionVector.z = 0;
+			dashPredictionVector *= (playerTag->getPlayerSpeed());
+			break;
+		case 2:
+			dashPredictionVector.x = 3;
+			dashPredictionVector.y = 0;
+			dashPredictionVector.z = 0;
+			dashPredictionVector *= (playerTag->getPlayerSpeed());
+			break;
+		case 3:
+			dashPredictionVector.x = -3;
+			dashPredictionVector.y = 5;
+			dashPredictionVector.z = 0;
+			dashPredictionVector *= (playerTag->getPlayerSpeed());
+			break;
+		case 4:
+			dashPredictionVector.x = 3;
+			dashPredictionVector.y = 5;
+			dashPredictionVector.z = 0;
+			dashPredictionVector *= (playerTag->getPlayerSpeed());
+			break;
+		}
+	}
+
+	void EnemyAI::ReadyToChargeJumpingInPlace(int sideValue) {
+		switch (sideValue) {
+		case 0:
+			dashPredictionVector.x = 0;
+			dashPredictionVector.y = 0;
+			dashPredictionVector.z = 0;
+			dashPredictionVector *= (playerTag->getPlayerSpeed());
+			break;
+		case 1:
+			dashPredictionVector.x = -3;
+			dashPredictionVector.y = 0;
+			dashPredictionVector.z = 0;
+			dashPredictionVector *= (playerTag->getPlayerSpeed());
+			break;
+		case 2:
+			dashPredictionVector.x = 3;
+			dashPredictionVector.y = 0;
+			dashPredictionVector.z = 0;
+			dashPredictionVector *= (playerTag->getPlayerSpeed());
+			break;
+		}
+	}
+
+	void EnemyAI::ReadyToChargeJumpingForward(int sideValue) {
+		switch (sideValue) {
+		case 0:
+			dashPredictionVector.x = 0;
+			dashPredictionVector.y = 5;
+			dashPredictionVector.z = 0;
+			dashPredictionVector *= (playerTag->getPlayerSpeed());
+			break;
+		case 1:
+			dashPredictionVector.x = -1;
+			dashPredictionVector.y = 5;
+			dashPredictionVector.z = 0;
+			dashPredictionVector *= (playerTag->getPlayerSpeed());
+			break;
+		case 2:
+			dashPredictionVector.x = 1;
+			dashPredictionVector.y = 5;
+			dashPredictionVector.z = 0;
+			dashPredictionVector *= (playerTag->getPlayerSpeed());
+			break;
+		}
+	}
+
+	void EnemyAI::ReadyToChargeJumpingBackwards(int sideValue) {
+		switch (sideValue) {
+		case 0:
+			dashPredictionVector.x = 0;
+			dashPredictionVector.y = 0;
+			dashPredictionVector.z = 0;
+			dashPredictionVector *= (playerTag->getPlayerSpeed());
+			break;
+		case 1:
+			dashPredictionVector.x = -3;
+			dashPredictionVector.y = 0;
+			dashPredictionVector.z = 0;
+			dashPredictionVector *= (playerTag->getPlayerSpeed());
+			break;
+		case 2:
+			dashPredictionVector.x = 3;
+			dashPredictionVector.y = 0;
+			dashPredictionVector.z = 0;
+			dashPredictionVector *= (playerTag->getPlayerSpeed());
+			break;
+		}
 	}
 }
