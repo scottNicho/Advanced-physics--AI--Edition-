@@ -99,46 +99,19 @@ namespace NCL::CSC8503 {
 		}
 
 
-		void EnemyCloseOnPlayer() {
-			Vector3 enemyDirectionVector = this->GetTransform().GetOrientation() * Vector3 { 0, 0, -1 };
-			float distance = playerTag->getCurrentPosition().distanceFromEnemy;
-			this->GetPhysicsObject()->AddForce(enemyDirectionVector * 60);
-		}
+		void EnemyCloseOnPlayer();
 
-		void enemyMoveForward() {
-			Vector3 enemyDirectionVector = this->GetTransform().GetOrientation() * Vector3 { 0, 0, -1 };
-			this->GetPhysicsObject()->AddForce(enemyDirectionVector * 2000.0f);
-		}
+		void enemyMoveForward();
 
-		void enemyMoveBackwards(GameObject* enemyAI) {
-			Vector3 enemyDirectionVector = enemyAI->GetTransform().GetOrientation() * Vector3 { 0, 0, -1 };
-			enemyAI->GetPhysicsObject()->AddForce(enemyDirectionVector * -10.0f);
-		}
+		void enemyMoveBackwards(GameObject* enemyAI);
 
-		void enemyMoveRight() {
-			Vector3 enemyDirectionVector = this->GetTransform().GetOrientation() * Vector3 { 1, 0, 0 };
-			this->GetPhysicsObject()->AddForce(enemyDirectionVector * 100.0f);
-		}
+		void enemyMoveRight();
 
-		void enemyMoveLeft() {
-			Vector3 enemyDirectionVector = this->GetTransform().GetOrientation() * Vector3 { -1, 0, 0 };
-			this->GetPhysicsObject()->AddForce(enemyDirectionVector * 100.0f);
-		}
+		void enemyMoveLeft();
 
-		void enemyJump() {
-			Vector3 enemyDirectionVector = this->GetTransform().GetOrientation() * Vector3 { 0, 1, 0 };
-			this->GetPhysicsObject()->AddForce(enemyDirectionVector * 1100.0f);
-		}
+		void enemyJump();
 
-		void enemyCharge() {
-			if (!(this->GetEnemyDash())) {
-				return;
-			}
-			Vector3 enemyDirectionVector = this->GetTransform().GetOrientation() * Vector3 { 0, 0, -1 };
-			this->GetPhysicsObject()->AddForce(enemyDirectionVector * 5000.0f);
-			this->GetPhysicsObject()->AddForce(dashPredictionVector * 1000.0f);
-			this->toggleEnemyDash();
-		}
+		void enemyCharge();
 
 		bool GetEnemyCanFaint() {
 			return enemyCanFaint;
@@ -148,139 +121,68 @@ namespace NCL::CSC8503 {
 			enemyCanFaint = !enemyCanFaint;
 		}
 
-		void enemyFaint() {
-			if (enemyCanFaint) {
-				this->SetResponseCapture(true);
-				this->preResponseCapture();
-				faintDirectionVector = this->GetTransform().GetOrientation() * Vector3 { 0, 0, -1 };
-				this->GetPhysicsObject()->AddForce(faintDirectionVector * 5000.0f);
-				faintStartPosition = this->GetTransform().GetPosition();
-				toggleEnemyCanFaint();
-				SetFaintMoveBackSwitch(true);
-				return;
-			}
-			if ((((this->GetTransform().GetPosition()) - (faintStartPosition)).Length() > 3)&& getFaintMoveBackSwitch()) {
-				this->GetPhysicsObject()->AddForce(faintDirectionVector * -4900.0f);
-				//toggleEnemyCanFaint();
-				SetFaintMoveBackSwitch(false);
-				return;
-			}
-		}
+		void enemyFaint();
 
 
-		void enemySideDodge() {
-			int ranX = rand() % 10;
-			if (ranX >= 5) {
-				enemyMoveRight();
-				return;
-			}
-			enemyMoveLeft();
-		}
+		void enemySideDodge();
 
-		void moveToCentre() {
-			int ranY = rand()%20;
-			Vector3 directionToCentre = (centreSafteyCircle - this->GetTransform().GetPosition()).Normalised();
-			float distanceToCentre = directionToCentre.Length();
-			this->GetPhysicsObject()->AddForce(directionToCentre * (10 * distanceToCentre));
-			if (ranY >= 15) {
-				enemyJump();
-			}
-		}
+		void moveToCentre();
 
 
-		void moveToTarget() {
-			GameObject* playerCharacter = playerTag->getPlayerTrack();
-			Vector3 playerTargetPosition = playerCharacter->GetTransform().GetPosition();
-			float angle = getAngleObjectTarget(playerCharacter);
-			if (angle <= 0.2) {
-				setFacingPlayer(true);
-			}
-			else
-			{
-				setFacingPlayer(false);
-			}
+		void moveToTarget();
 
-			if (getFacingPlayer()) {
-				faceTarget();
-				EnemyCloseOnPlayer();
-				return;
-			}
-			else
-			{
-				//steady();
-				faceTarget();
-			}
-		}
-
-		void steady() {
-			this->GetPhysicsObject()->SetLinearVelocity(Vector3(0,0,0));
-		}
+		void steady();
 
 		//Enemy Ai movement 
 		//Enemy AI control
 		void updateEnemyAction(float time) {
 			getPlayState(time);
-			if (playerClose) {
+			if (playerClose && playerTag->GetCurrentState()) {
+				playerState::totalState responseState = mostLikelyResponseFinder();
+				if (responseState.forwardResponse != playerState::currentStateForward::non_forward) {
+					SetDashPredictionVector(responseState);
+					enemyCharge();
+				}
+				else if (playerClose) {
+					//enemyCharge();
+					enemyFaint();
+				}
+		
+			}
+		    else if (playerClose) {
 				//enemyCharge();
 				enemyFaint();
 			}
 		}
 		//Enemy AI control
-		void UpdateEnemyLive() {
-			updatePlayerClose();
-			moveToTarget();
-		}
+		void UpdateEnemyLive();
 
 
 		//Player Info
-		void getPlayState(float time){
-			playerTag->setPlayerSpeed(time);
-			playerTag->UpdateCurrentPosition();
-			playerTag->updateState();
-			cout <<"player Forward state " << playerTag->getPlayerForwardState() << endl;
-			cout << "player side state " << playerTag->getPlayerSideState() << endl;
-		}
+		void getPlayState(float time);
 		//Player info
 		 
 		
 		//State anlysis
 
-		float percentageFind(vector<playerState::totalState> gottenState, int indexNum) {
-			if (indexNum < 0 || indexNum >= gottenState.size()) {
-				return 0.0f;
-			}
+		float percentageFind(vector<playerState::totalState> gottenState, int indexNum);
 
-			int count = 0;
-			for (int i = 0; i < gottenState.size(); i++) {
-				if (gottenState[indexNum].forwardResponse == gottenState[i].forwardResponse && gottenState[indexNum].sidewardsResponse == gottenState[i].sidewardsResponse) {
-					count += 1;
-				}
-			}
+		playerState::totalState mostLikelyResponseFinder();
 
-			return static_cast<float>(count) / gottenState.size();
-		}
+		void SetDashPredictionVector(playerState::totalState responsePrimer);
 
-		playerState::totalState mostLikelyResponseFinder(vector<playerState::totalState> currentStateData) {
-			playerState::totalState mostLikelyresponse;
-			float highestPercentage = 0.0f;
-			if (currentStateData.size() == 0) {
-				return *blankResponse; 
-			}
-			for (int i = 0; i < currentStateData.size(); i++) {
-				float currentPercentage = percentageFind(currentStateData, i);
-				if (currentPercentage > highestPercentage) {
-					highestPercentage = currentPercentage;
-					mostLikelyresponse = currentStateData[i];
-				}
-			}
-			if (highestPercentage < 0.35) {
-				return *blankResponse;
-			}
-			else
-			{
-				return mostLikelyresponse;
-			}
-		}
+		void ReadyToChargeStill(int sideValue);
+
+		void ReadyToChargeForward(int sideValue);
+		
+		void ReadyToChargeBackwards(int sideValue);
+
+		void ReadyToChargeJumpingInPlace(int sideValue);
+
+		void ReadyToChargeJumpingForward(int sideValue);
+
+		void ReadyToChargeJumpingBackwards(int sideValue);
+
 
 		//state analysis 
 		//state response 
@@ -292,9 +194,9 @@ namespace NCL::CSC8503 {
 			return responseCapture;
 		}
 
-		void setDashPredictionVector(Vector3 newDashVector) {
+		/*void setDashPredictionVector(Vector3 newDashVector) {
 			dashPredictionVector = newDashVector;
-		}
+		}*/
 		//state response
 		//EnemyAI master control
 
