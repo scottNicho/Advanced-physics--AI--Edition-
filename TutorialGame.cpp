@@ -976,7 +976,7 @@ EnemyAI* TutorialGame::AddEnemyGoatToWorld(const Vector3& position,GameObject *p
 
 playerTracking* TutorialGame::AddPlayerToWorld(const Vector3& position) {
 	float meshSize		= 2.0f;
-	float inverseMass	= 0.9f;
+	float inverseMass	= 2.9f;
 
 	playerTracking* character = new playerTracking();
 	AABBVolume* volume  = new AABBVolume(Vector3{2,2,2});
