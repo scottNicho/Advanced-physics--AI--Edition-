@@ -26,7 +26,7 @@ namespace NCL::CSC8503 {
 
 	void EnemyAI::updatePlayerClose() {
 		float distanceBetween = playerTag->getCurrentPosition().distanceFromEnemy;
-		if (distanceBetween < 12) {
+		if (distanceBetween < 22) {
 			setPlayerClose(true);
 			steady(); 
 		}
@@ -188,12 +188,13 @@ namespace NCL::CSC8503 {
 			return;
 		}
 		Vector3 enemyDirectionVector = this->GetTransform().GetOrientation() * Vector3 { 0, 0, -1 };
-		this->GetPhysicsObject()->AddForce(enemyDirectionVector * 5000.0f);
-		this->GetPhysicsObject()->AddForce(dashPredictionVector * 1000.0f);
+		this->GetPhysicsObject()->AddForce(enemyDirectionVector * 1000.0f);
+		this->GetPhysicsObject()->AddForce(dashPredictionVector );
 		this->toggleEnemyDash();
 	}
 
 	void EnemyAI::enemyFaint() {
+		std::cout << "enemyfaint " << std::endl;
 		if (enemyCanFaint) {
 			this->SetResponseCapture(true);
 			this->preResponseCapture();
@@ -204,8 +205,8 @@ namespace NCL::CSC8503 {
 			SetFaintMoveBackSwitch(true);
 			return;
 		}
-		if ((((this->GetTransform().GetPosition()) - (faintStartPosition)).Length() > 3) && getFaintMoveBackSwitch()) {
-			this->GetPhysicsObject()->AddForce(faintDirectionVector * -4900.0f);
+		if ((((this->GetTransform().GetPosition()) - (faintStartPosition)).Length() > 10) && getFaintMoveBackSwitch()) {
+			this->GetPhysicsObject()->AddForce(faintDirectionVector * -4800.0f);
 			//toggleEnemyCanFaint();
 			SetFaintMoveBackSwitch(false);
 			return;
@@ -256,7 +257,7 @@ namespace NCL::CSC8503 {
 	}
 
 	void EnemyAI::steady() {
-		Vector3 reducedVelocity = (this->GetPhysicsObject()->GetLinearVelocity()) * 0.1;
+		Vector3 reducedVelocity = (this->GetPhysicsObject()->GetLinearVelocity()) * 0.7;
 		this->GetPhysicsObject()->SetLinearVelocity(reducedVelocity);
 	}
 
@@ -269,8 +270,8 @@ namespace NCL::CSC8503 {
 		playerTag->setPlayerSpeed(time);
 		playerTag->UpdateCurrentPosition();
 		playerTag->updateState();
-		cout << "player Forward state " << playerTag->getPlayerForwardState() << endl;
-		cout << "player side state " << playerTag->getPlayerSideState() << endl;
+		/*cout << "player Forward state " << playerTag->getPlayerForwardState() << endl;
+		cout << "player side state " << playerTag->getPlayerSideState() << endl;*/
 	}
 
 	float EnemyAI::percentageFind(vector<playerState::totalState> gottenState, int indexNum) {
@@ -291,9 +292,9 @@ namespace NCL::CSC8503 {
 	playerState::totalState EnemyAI::mostLikelyResponseFinder() {
 		vector<playerState::totalState> currentStateData = playerTag->getResponseValue({ (playerTag->GetCurrentState()->forwardResponse),(playerTag->GetCurrentState()->sidewardsResponse) });
 		playerState::totalState mostLikelyresponse;
-		std::cout << "total response size " << playerTag->GetTotalResponse().size() << std::endl;
+		//std::cout << "total response size " << playerTag->GetTotalResponse().size() << std::endl;
 		float highestPercentage = 0.0f;
-		if (currentStateData.size() == 0) {
+		if (currentStateData.size() == 0 || currentStateData.size()< 5) {
 			return *blankResponse;
 		}
 		for (int i = 0; i < currentStateData.size(); i++) {
