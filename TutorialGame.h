@@ -244,7 +244,7 @@ namespace NCL {
 			float runningEnemyChargeTime = 0.0f;
 			float runningEnemyFaintTime = 0.0f;
 
-			const double stateUpdateTimeLimit = 1.5f;
+			const double stateUpdateTimeLimit = 2.5f;
 			float runningStateUpdateTime;
 
 			float runnigChargeTime = 0.0f;
@@ -262,3 +262,5 @@ namespace NCL {
 		};
 	}
 }
+
+
